@@ -1,0 +1,28 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+    <h2>{{ album.title }}</h2>
+    <p>{{ album.description }}</p>
+    <a href="{% url 'upload_photos' album.id %}">Upload New Photo</a>
+    <h2>Photos in this album:</h2>
+    <div>
+        {% for photo in photos %}
+            <div>
+                <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" width="100" />
+                <p>{{ photo.caption }}</p>
+                <button onclick="confirmDelete('{{ photo.id }}')">Delete</button>
+            </div>
+        {% endfor %}
+    </div>
+
+
+    <script type="text/javascript">
+        // Function to confirm the deletion of an image
+        function confirmDelete(photoId) {
+            if (confirm("Are you sure you want to delete this photo?")) {
+                // Redirect to the delete URL for that specific photo
+                window.location.href = '/delete_photo/' + photoId + '/';
+            }
+        }
+    </script>
+{% endblock %}

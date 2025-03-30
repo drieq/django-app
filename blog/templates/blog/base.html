@@ -2,23 +2,25 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Django blog</title>
+        <title>Photo-Ops</title>
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
         <link rel="stylesheet" href="{% static '/css/blog.css' %}">
-        <!--<link rel="stylesheet" href="https://eu.pythonanywhere.com/user/drieq/files/home/drieq/drieq.eu.pythonanywhere.com/blog/static/css/blog.css">-->
 
     </head>
     <body>
         <header class="page-header">
             <div class="container">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'post_new' %}" class="top-menu">
+                    <a href="{% url 'create_album' %}" class="top-menu">
                         {% include './icons/file-earmark-plus.svg' %}
                     </a>
+                    <span style="color:white;" class="top-menu">Hello, {{request.user}}</span>
+                    <span class="top-menu"><a href="{% url 'logout' %}">Logout</a></span>
                 {% endif %}
-                <h1><a href="/">Django Blog</a></h1>
+                <h1><a href="/">Photo-Ops</a></h1>
             </div>
+
         </header>
 
         <main class="container">
@@ -30,4 +32,11 @@
             </div>
         </main>
     </body>
+    <footer>
+        <script
+            src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+            crossorigin="anonymous"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    </footer>
 </html>

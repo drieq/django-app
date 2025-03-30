@@ -1,0 +1,16 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+    <h2>Upload Photos to {{ album.title }}</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="images">Choose images to upload:</label>
+        <input type="file" name="images" accept=".jpg,.jpeg,.png" multiple><br><br> <!-- Multiple files allowed -->
+
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
+
+        <button type="submit">Upload Photos</button>
+    </form>
+{% endblock %}
