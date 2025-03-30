@@ -18,8 +18,10 @@ urlpatterns = [
 
     path('create_album/', views.create_album, name='create_album'),
     path('album/<int:album_id>/', views.album_detail, name='album_detail'),
+    path('album/<int:album_id>/edit/', views.edit_album, name='edit_album'),
     path('album/<int:album_id>/upload/', views.upload_photos, name='upload_photos'),
     path('delete_photo/<int:photo_id>/', views.delete_photo, name='delete_photo'),
+    path('photo/<int:photo_id>/', views.photo_detail, name='photo_detail'),
 ]
 
 # Serve media files during development

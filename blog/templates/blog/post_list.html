@@ -3,6 +3,18 @@
 {% block content %}
 
 <div class="row">
+
+    {% if user.is_authenticated %}
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+        <a href="{% url 'create_album' %}" class="btn btn-primary">
+            <i class="bi bi-folder-plus"></i> New Album
+        </a>
+    </div>
+
+    {% endif %}
+
+
     {% for message in messages %}
 
         <div id="messages" class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -11,6 +23,8 @@
         </div>
 
     {% endfor %}
+
+    <h1>Your Albums</h1>
 
     {% for album in albums %}
 

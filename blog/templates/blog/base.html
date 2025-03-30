@@ -12,11 +12,15 @@
         <header class="page-header">
             <div class="container">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'create_album' %}" class="top-menu">
-                        {% include './icons/file-earmark-plus.svg' %}
-                    </a>
-                    <span style="color:white;" class="top-menu">Hello, {{request.user}}</span>
-                    <span class="top-menu"><a href="{% url 'logout' %}">Logout</a></span>
+                <div class="top-menu">
+                    <i class="bi bi-person-circle"></i> {{request.user}}
+                    <a class="btn btn-primary logout" href="{% url 'logout' %}">Logout</a>
+                </div>
+                {% else %}
+                <div class="top-menu">
+                    <a class="btn btn-primary" href="{% url 'login' %}">Login</a>
+                    <a class="btn btn-primary" href="{% url 'register' %}">Register</a>
+                </div>
                 {% endif %}
                 <h1><a href="/">Photo-Ops</a></h1>
             </div>

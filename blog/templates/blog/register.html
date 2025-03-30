@@ -12,35 +12,28 @@
             <form method="POST" action="">
                 {% csrf_token %}
 
-                <div class="input-group mb-2">
-                    <div class="input-group-append">
-                        <span class="input-group-text">{{ form.username.label }}</span>
-                        {{ form.username }}
-                    </div>
+                <div class="mb-3">
+                    <label for="id_username" class="form-label">{{ form.username.label }}</label>
+                    {{ form.username }}
                 </div>
 
-                <div class="input-group mb-2">
-                    <div class="input-group-append">
-                        <span class="input-group-text">{{ form.email.label }}</span>
-                        {{ form.email }}
-                    </div>
+                <div class="mb-3">
+                    <label for="id_email" class="form-label">{{ form.email.label }}</label>
+                    {{ form.email }}
                 </div>
 
-                <div class="input-group mb-2">
-                    <div class="input-group-append">
-                        <span class="input-group-text">{{ form.password1.label }}</span>
-                        {{ form.password1 }}
-                    </div>
+                <div class="mb-3">
+                    <label for="id_password1" class="form-label">{{ form.password1.label }}</label>
+                    {{ form.password1 }}
                 </div>
 
-                <div class="input-group mb-2">
-                    <div class="input-group-append">
-                        <span class="input-group-text">{{ form.password2.label }}</span>
+                <div class="mb-3">
+                    <label for="id_password2" class="form-label">{{ form.password2.label }}</label>
                         {{ form.password2 }}
                     </div>
                 </div>
 
-                <input type="submit" name="Create user" class="btn btn-success">
+                <input type="submit" name="Create user" value="Create user" class="btn btn-success">
             </form>
         </div>
         {{ form.errors }}

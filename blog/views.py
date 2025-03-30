@@ -145,7 +145,29 @@ def album_detail(request, album_id):
     photos = album.photos.all()
     return render(request, 'blog/album_detail.html', {'album': album, 'photos': photos})
 
-@login_required
+# View to edit an existing album
+@login_required(login_url='login')
+def edit_album(request, album_id):
+    album = get_object_or_404(Album, id=album_id)
+
+    # Check if the user is the owner of the album
+    if album.owner != request.user:
+        messages.error(request, 'You are not allowed to edit that album.')
+        return redirect(reverse('post_list'))
+    
+    if request.method == 'POST':
+        form = AlbumForm(request.POST, instance=album)
+        if form.is_valid():
+            album = form.save(commit=False)
+            album.owner = request.user
+            album.save()
+            return redirect('album_detail', album_id=album.id)
+        
+    else:
+        form = AlbumForm(instance=album)
+    return render(request, 'blog/edit_album.html', {'form': form, 'album': album})
+
+@login_required(login_url='login')
 def delete_photo(request, photo_id):
     # Get the photo object or return a 404 error if not found
     photo = get_object_or_404(Photo, id=photo_id)
@@ -160,3 +182,23 @@ def delete_photo(request, photo_id):
     else:
         # If the user is not the owner, redirect them or raise an error
         return redirect('album_detail', album_id=photo.album.id)
+    
+@login_required(login_url='login')
+def photo_detail(request, photo_id):
+    photo = Photo.objects.get(id=photo_id)
+
+    if photo.album.owner != request.user:
+        messages.error(request, 'You are not allowed to see that photo.')
+        return redirect(reverse('post_list'))
+
+    exif_metadata = photo.exif_metadata
+    lens_model = photo.lens_model
+    camera_model = photo.camera_model
+
+    context = {
+        'photo': photo,
+        'exif_metadata': exif_metadata,
+        'lens_model': lens_model,
+        'camera_model': camera_model,
+    }
+    return render(request, 'blog/photo_detail.html', context)

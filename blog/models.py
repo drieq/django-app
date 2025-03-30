@@ -2,6 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from .utils import get_exif_data
+from PIL import Image
 
 class Post(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -40,6 +42,20 @@ class Photo(models.Model):
         if not self.caption:
             self.caption = self.image.name.split('/')[-1]  # Get the filename from the image path
         super().save(*args, **kwargs)  # Call the original save method
+
+    @property
+    def exif_metadata(self):
+        return get_exif_data(self.image.path)  # Retrieve metadata
+    
+    @property
+    def lens_model(self):
+        exif = self.exif_metadata
+        return exif.get("LensModel", "Unknown") if exif else "Unknown"
+    
+    @property
+    def camera_model(self):
+        exif = self.exif_metadata
+        return exif.get("Model", "Unknown") if exif else "Unknown"
 
     def __str__(self):
         return self.caption or f"Photo {self.id}"

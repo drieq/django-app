@@ -1,0 +1,35 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+
+    <a href="{% url 'album_detail' photo.album.id %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Back to Album
+    </a>
+
+    <div class="row mt-5">
+        <div class="col">
+            <h2>{{ photo.caption }}</h2>
+            <h2>Image Metadata:</h2>
+            <!-- <ul>
+                {% if exif_metadata %}
+                    {% for key, value in exif_metadata.items %}
+                        <li><strong>{{ key }}:</strong> {{ value }}</li>
+                    {% endfor %}
+                {% else %}
+                    <p>No EXIF metadata available for this photo.</p>
+                {% endif %}
+            </ul> -->
+
+            <ul>
+                <li><strong>Lens: </strong>{{ lens_model }}</li>
+                <li><strong>Camera: </strong>{{ camera_model }}</li>
+            </ul>
+
+        </div>
+        
+        <div class="col">
+            <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" class="img-fluid rounded" />
+    </div>
+</div>
+
+{% endblock %}
