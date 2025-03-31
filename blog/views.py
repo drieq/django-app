@@ -6,8 +6,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.forms import modelformset_factory
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse  # Import for using reverse instead of hardcoding URLs
-from .models import Post, Album, Photo
-from .forms import PostForm, RegistrationForm, PhotoForm, AlbumForm
+from django.contrib.auth.models import User
+from .models import Profile, Post, Album, Photo
+from .forms import PostForm, RegistrationForm, PhotoForm, AlbumForm, EditProfileForm
 
 # Create your views here.
 
@@ -23,6 +24,28 @@ def post_list(request):
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
     return render(request, 'blog/post_detail.html', {'post': post})
+
+# View to display the profile of a user
+@login_required(login_url='login')
+def profile(request, user_username):
+    user = get_object_or_404(User, username=user_username)
+    return render(request, 'blog/profile.html', {'user': user, 'profile': user.profile})
+
+# View to edit your own profile
+@login_required(login_url='login')
+def edit_profile(request):
+
+    profile = request.user.profile
+
+    if request.method == "POST":
+        form = EditProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('profile', args=[request.user.username]))
+    else:
+        form = EditProfileForm(instance=profile)
+
+    return render(request, 'blog/edit_profile.html', {'form': form})
 
 # View to create a new post
 @login_required(login_url='login')
@@ -46,7 +69,7 @@ def post_edit(request, pk):
     if request.user != post.author:
         messages.error(request, 'You are not allowed to edit that post.')
         return redirect(reverse('post_list'))  # Use reverse for URL
-    else: 
+    else:
         if request.method == "POST":
             form = PostForm(request.POST, instance=post)
             if form.is_valid():
@@ -108,7 +131,7 @@ def create_album(request):
             return redirect('album_detail', album_id=album.id)
     else:
         form = AlbumForm()
-    
+
     return render(request, 'blog/create_album.html', {'form': form})
 
 # View to upload a photo to an album
@@ -154,7 +177,7 @@ def edit_album(request, album_id):
     if album.owner != request.user:
         messages.error(request, 'You are not allowed to edit that album.')
         return redirect(reverse('post_list'))
-    
+
     if request.method == 'POST':
         form = AlbumForm(request.POST, instance=album)
         if form.is_valid():
@@ -162,7 +185,7 @@ def edit_album(request, album_id):
             album.owner = request.user
             album.save()
             return redirect('album_detail', album_id=album.id)
-        
+
     else:
         form = AlbumForm(instance=album)
     return render(request, 'blog/edit_album.html', {'form': form, 'album': album})
@@ -182,7 +205,7 @@ def delete_photo(request, photo_id):
     else:
         # If the user is not the owner, redirect them or raise an error
         return redirect('album_detail', album_id=photo.album.id)
-    
+
 @login_required(login_url='login')
 def photo_detail(request, photo_id):
     photo = Photo.objects.get(id=photo_id)

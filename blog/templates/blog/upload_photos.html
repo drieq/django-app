@@ -5,12 +5,12 @@
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <label for="images">Choose images to upload:</label>
-        <input type="file" name="images" accept=".jpg,.jpeg,.png" multiple><br><br> <!-- Multiple files allowed -->
+        <input class="form-control" type="file" name="images" accept=".jpg,.jpeg,.png" multiple><br><br> <!-- Multiple files allowed -->
 
         {% if error %}
             <p style="color: red;">{{ error }}</p>
         {% endif %}
 
-        <button type="submit">Upload Photos</button>
+        <button type="submit" class="btn btn-success">Upload Photos</button>
     </form>
 {% endblock %}

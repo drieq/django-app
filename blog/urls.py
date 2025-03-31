@@ -16,6 +16,9 @@ urlpatterns = [
     path('login/', views.loginPage, name='login'),
     path('logout/', views.logoutUser, name='logout'),
 
+    path('user/<str:user_username>/', views.profile, name='profile'),
+    path('edit-profile/', views.edit_profile, name='edit_profile'),
+
     path('create_album/', views.create_album, name='create_album'),
     path('album/<int:album_id>/', views.album_detail, name='album_detail'),
     path('album/<int:album_id>/edit/', views.edit_album, name='edit_album'),

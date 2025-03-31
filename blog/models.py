@@ -5,6 +5,13 @@ from django.contrib.auth.models import User
 from .utils import get_exif_data
 from PIL import Image
 
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    about_me = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.user.username
+
 class Post(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
@@ -18,7 +25,7 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
-    
+
 # Album model to group photos together
 class Album(models.Model):
     title = models.CharField(max_length=200)
@@ -46,12 +53,12 @@ class Photo(models.Model):
     @property
     def exif_metadata(self):
         return get_exif_data(self.image.path)  # Retrieve metadata
-    
+
     @property
     def lens_model(self):
         exif = self.exif_metadata
         return exif.get("LensModel", "Unknown") if exif else "Unknown"
-    
+
     @property
     def camera_model(self):
         exif = self.exif_metadata

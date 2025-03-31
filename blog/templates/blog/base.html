@@ -13,7 +13,7 @@
             <div class="container">
                 {% if user.is_authenticated %}
                 <div class="top-menu">
-                    <i class="bi bi-person-circle"></i> {{request.user}}
+                    <a href="{% url 'profile' request.user.username %}"><i class="bi bi-person-circle"></i> {{request.user}}</a>
                     <a class="btn btn-primary logout" href="{% url 'logout' %}">Logout</a>
                 </div>
                 {% else %}

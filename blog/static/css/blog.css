@@ -136,6 +136,10 @@ article.album .published-date {
     text-overflow: ellipsis;
 }
 
+.album-photos .col .photo-details button {
+    z-index: 999;
+}
+
 .album-photos .col .btn {
     max-width: max-content;
     max-height: max-content;

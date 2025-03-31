@@ -10,16 +10,17 @@
     <h2>Photos in this album:</h2>
     <div class="row album-photos">
         {% for photo in photos %}
-            <a href="{% url 'photo_detail' photo.id %}" class="col card p-0">
+        <div class="col card p-0">
+            <a href="{% url 'photo_detail' photo.id %}">
                 <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" width="100" />
-
+            </a>
                 <div class="photo-details p-2">
                     <span>{{ photo.caption }}</span>
                     <button class="btn btn-light" onclick="confirmDelete('{{ photo.id }}')">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
-            </a>
+        </div>
         {% endfor %}
     </div>
 
