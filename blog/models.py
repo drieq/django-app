@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.files.base import ContentFile
 from .utils import get_exif_data
 from PIL import Image
@@ -9,7 +9,9 @@ from io import BytesIO
 import os
 
 class Profile(models.Model):
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+
     about_me = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -36,6 +38,15 @@ class Album(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='albums')
+    clients = models.ManyToManyField(User, related_name="accessible_albums", blank=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # ✅ Filter clients: Only allow users in the "Clients" group
+        client_group = Group.objects.get(name="Clients")
+        valid_clients = User.objects.filter(groups=client_group, id__in=self.clients.all())
+        self.clients.set(valid_clients)  # ✅ Reset clients field to only valid users
 
     def __str__(self):
         return self.title
@@ -67,7 +78,7 @@ class Photo(models.Model):
         image.save(thumb_io, format='JPEG')
         thumb_file = ContentFile(thumb_io.getvalue())
 
-        self.thumbnail.save(thumb_name, thumb_file, save=False) 
+        self.thumbnail.save(thumb_name, thumb_file, save=False)
 
 
     @property

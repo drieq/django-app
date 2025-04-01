@@ -4,7 +4,7 @@
 
 <div class="row">
 
-    {% if user.is_authenticated %}
+    {% if request.user.groups.all.0.name == "Photographers" %}
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
         <a href="{% url 'create_album' %}" class="btn btn-primary">
@@ -12,17 +12,31 @@
         </a>
     </div>
 
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+        <a href="{% url 'create_client' %}">Add a Client</a>
+    </div>
     {% endif %}
 
 
-    {% for message in messages %}
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == "error" %}
 
-        <div id="messages" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Whoops!</strong> {{message}}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+                <div id="messages" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Whoops!</strong> {{message}}
 
-    {% endfor %}
+            {% endif %}
+            {% if message.tags == "success" %}
+
+                <div id="messages" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Yay!</strong> {{message}}
+
+            {% endif %}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+        {% endfor %}
+    {% endif %}
 
     <h1>Your Albums</h1>
 

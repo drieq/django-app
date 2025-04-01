@@ -6,10 +6,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.forms import modelformset_factory
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse  # Import for using reverse instead of hardcoding URLs
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.http import JsonResponse
 from .models import Profile, Post, Album, Photo
-from .forms import PostForm, RegistrationForm, PhotoForm, AlbumForm, EditProfileForm
+from .forms import PostForm, RegistrationForm, PhotoForm, AlbumForm, EditProfileForm, ClientRegistrationForm
 
 # Create your views here.
 
@@ -45,7 +45,7 @@ def update_about_me(request, user_username):
             # Ensure the logged-in user is the one being updated
             if request.user != user:
                 return JsonResponse({'error': 'You are not allowed to update this user\'s profile'}, status=403)
-            
+
             user.profile.about_me = new_about_me
             user.profile.save()
 
@@ -146,6 +146,10 @@ def logoutUser(request):
 # View to create a new album
 @login_required(login_url='login')
 def create_album(request):
+    if not request.user.groups.filter(name="Photographers").exists():
+        messages.error(request, 'You are not allowed to create new albums.')
+        return redirect(reverse('post_list'))
+
     if request.method == 'POST':
         form = AlbumForm(request.POST)
         if form.is_valid():
@@ -184,9 +188,8 @@ def album_detail(request, album_id):
     album = get_object_or_404(Album, id=album_id)  # Only allow album owners to see
 
     # Check if the album belongs to the logged-in user
-    if album.owner != request.user:
-        # Redirect to another page, e.g., an error page or their album list
-        messages.error(request, "You tried to visit an album that is not yours.")
+    if album.owner != request.user and request.user not in album.clients.all():
+        messages.error(request, "You do not have access to this album.")
         return redirect(reverse('post_list'))
 
     photos = album.photos.all()
@@ -234,7 +237,7 @@ def update_album_title(request, album_id):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
-    
+
 # View to update the description of an album
 @login_required(login_url='login')
 def update_album_description(request, album_id):
@@ -290,3 +293,29 @@ def photo_detail(request, photo_id):
         'camera_model': camera_model,
     }
     return render(request, 'blog/photo_detail.html', context)
+
+@login_required
+def create_client(request):
+    if not request.user.groups.filter(name="Photographers").exists():
+        messages.error(request, 'You cannot create client accounts.')
+        return redirect(reverse('post_list'))
+
+    form = ClientRegistrationForm()
+
+    if request.method == "POST":
+        form = ClientRegistrationForm(request.POST)
+        if form.is_valid():
+            client = form.save(commit=False)
+            client.save()
+
+            client.groups.clear()  # 🔹 This removes any previously assigned groups
+
+            # Add the user to the Clients group
+            client_group = Group.objects.get_or_create(name="Clients")[0]
+            client.groups.add(client_group)
+
+            username = escape(client.username)
+            messages.success(request, f'Account was created for {username}')
+            return redirect(reverse('post_list'))
+
+    return render(request, "blog/create_client.html", {"form": form})

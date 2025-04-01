@@ -50,3 +50,9 @@ class PhotoForm(forms.ModelForm):
             raise ValidationError("Only JPG or PNG files are allowed.")
 
         return image
+
+class ClientRegistrationForm(UserCreationForm):
+
+    class Meta:
+        model = User
+        fields = ["username", "email", "password1", "password2"]
