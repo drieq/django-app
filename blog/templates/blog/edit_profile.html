@@ -1,9 +1,23 @@
 {% extends 'blog/base.html' %}
+{% load widget_tweaks %}
 
 {% block content %}
     <h2>Edit profile of {{ user.username }}</h2>
-    <form method="POST" class="post-form">{% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="save btn btn-secondary">Save</button>
+    <form method="POST" class="post-form">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="{{ form.about_me.id_for_label }}" class="form-label">{{ form.about_me.label }}</label>
+            {{ form.about_me|add_class:"form-control" }}
+            {% if form.about_me.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.about_me.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <input type="submit" class="save btn btn-primary" value="Save">
     </form>
 {% endblock %}

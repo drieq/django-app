@@ -4,13 +4,63 @@
     <h2>Upload Photos to {{ album.title }}</h2>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <label for="images">Choose images to upload:</label>
-        <input class="form-control" type="file" name="images" accept=".jpg,.jpeg,.png" multiple><br><br> <!-- Multiple files allowed -->
+        <div>
+            <label for="images">Choose images to upload:</label>
+            <input id="image-input" class="form-control" type="file" name="images" accept=".jpg,.jpeg,.png" multiple><br><br> <!-- Multiple files allowed -->
+        </div>
+
+
+        <div>
+            <!-- <label for="image-preview">Images Preview:</label> -->
+            <div id="image-preview-container">
+
+            </div>
+        </div>
 
         {% if error %}
             <p style="color: red;">{{ error }}</p>
         {% endif %}
 
-        <button type="submit" class="btn btn-success">Upload Photos</button>
+        <button type="submit" class="btn btn-success">Upload</button>
     </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Get the file input element
+        const imageInput = document.getElementById('image-input');
+        const previewContainer = document.getElementById('image-preview-container');
+
+        imageInput.addEventListener('change', function(event) {
+            const files = event.target.files;
+            
+            // Clear the preview container before adding new previews
+            previewContainer.innerHTML = '';
+
+            // Loop through each selected file
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                if (file && file.type.startsWith('image/')) {
+                    // Create a new FileReader to read the image file
+                    const reader = new FileReader();
+                    
+                    // Define what happens once the file is read
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;  // Set the image source to the file's data URL
+                        img.style.maxWidth = '200px'; // Optional: Set max width for the preview
+                        img.style.marginRight = '10px'; // Optional: Add space between images
+                        img.style.marginBottom = '10px'; // Optional: Add space between images
+                        img.alt = "Image Preview";
+                        
+                        previewContainer.appendChild(img);  // Append the preview image to the container
+                    };
+                    
+                    // Read the image file
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+    });
+    </script>
 {% endblock %}

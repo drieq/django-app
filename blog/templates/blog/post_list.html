@@ -26,20 +26,24 @@
 
     <h1>Your Albums</h1>
 
-    {% for album in albums %}
+    <div class="album-container row">
 
-    <a href="{% url 'album_detail' album_id=album.pk %}"
-       class="album col bg-light">
-        <article class="album col bg-light">
-            <img src="{{ album.photos.first.image.url }}" alt="{{ album.photos.first.caption }}" width="200">
-            <div class="album-info">
-                <h2>{{ album.title }}</h2>
-                <p class="published-date">Created on: {{ album.created_at }}</p>
-            </div>
-        </article>
-    </a>
+        {% for album in albums %}
 
-    {% endfor %}
+        <a href="{% url 'album_detail' album_id=album.pk %}"
+        class="album col bg-light">
+            <article class="col bg-light">
+                <img src="{{ album.photos.first.thumbnail.url }}" alt="{{ album.photos.first.caption }}" width="200">
+                <div class="album-info">
+                    <h2>{{ album.title }}</h2>
+                    <p class="published-date">Created on: {{ album.created_at }}</p>
+                </div>
+            </article>
+        </a>
+
+        {% endfor %}
+
+    </div>
 </div>
 
 {% endblock %}

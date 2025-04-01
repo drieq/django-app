@@ -1,15 +1,75 @@
 {% extends 'blog/base.html' %}
 
 {% block content %}
-    <h2>{{ user.username }}</h2>
+    <div class="username-container">
+        <i class="bi bi-at"></i>
+        <h2>{{ user.username }}</h2>
+    </div>
 
-    <p>{{ user.profile.about_me }}</p>
+        <!-- Album Description Section -->
+        <div class="d-flex align-items-center mt-3">
+            <p id="profile-about_me" class="" style="max-width: 500px;">{{ user.profile.about_me }}</p>
+            {% if profile == request.user.profile %}
+            <textarea id="profile-about_me-input" class="form-control mb-3" style="display:none; max-width:500px; height:150px;">{{ user.profile.about_me }}</textarea>
+            <button id="edit-about_me-btn" class="btn btn-link text-primary" style="display:block;"><i class="bi bi-pencil"></i></button>
+            {% endif %}
+        </div>
 
-    {% if profile == request.user.profile %}
+        {% csrf_token %}
 
-        <a href="{% url 'edit_profile' %}" class="btn btn-primary">Edit Profile</a>
 
-    {% endif %}
+<script>
+    $(document).ready(function(){
+    var username = "{{ user.username }}";  // Pass the user's username to the AJAX request
+
+    // Edit title
+    $("#edit-about_me-btn").click(function(){
+        $("#profile-about_me").hide();  // Hide the current title
+        $("#profile-about_me-input").show();  // Show the input for editing
+        $("#profile-about_me-input").focus();  // Focus on the input field
+        
+        // Move the type cursor to the end of the input field
+        var input = $("#profile-about_me-input");
+        input.val(input.val());  // Set the value to itself to trigger the cursor to the end
+        input[0].setSelectionRange(input.val().length, input.val().length);
+
+    });
+
+    // Trigger when the input loses focus (blur)
+    $('#profile-about_me-input').on('blur', function() {
+        var newAboutMe = $(this).val().trim();  // Get the new description and trim any extra whitespace
+        var originalAboutMe = $("#profile-about_me").text().trim(); // Get the original description from the element
+
+        if (newAboutMe !== originalAboutMe) {  // Only send the request if the description has changed
+            $.ajax({
+                url: "{% url 'update_about_me' user_username=user.username %}",
+                type: "POST",
+                data: {
+                    'about_me': newAboutMe,  // The new description value
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // CSRF token
+                },
+                success: function(response) {
+                    console.log("Information updated:", response.about_me);
+                    $("#profile-about_me").text(response.about_me);  // Update the displayed description
+                    $("#profile-about_me-input").hide();  // Hide the input field after saving
+                    $("#profile-about_me").show();  // Show the updated description
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', status, error);
+                    alert('An error occurred while updating the about me message.');
+                }
+            });
+        } else {
+            // If no change is made, just hide the input field and show the description
+            $("#profile-about_me-input").hide();  // Hide the input field without making a request
+            $("#profile-about_me").show();  // Show the original description
+        }
+    });
+
+
+});
+</script>
+    
 
 
 {% endblock %}

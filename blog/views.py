@@ -7,6 +7,7 @@ from django.forms import modelformset_factory
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse  # Import for using reverse instead of hardcoding URLs
 from django.contrib.auth.models import User
+from django.http import JsonResponse
 from .models import Profile, Post, Album, Photo
 from .forms import PostForm, RegistrationForm, PhotoForm, AlbumForm, EditProfileForm
 
@@ -30,6 +31,29 @@ def post_detail(request, pk):
 def profile(request, user_username):
     user = get_object_or_404(User, username=user_username)
     return render(request, 'blog/profile.html', {'user': user, 'profile': user.profile})
+
+# View to update the about me of the current user
+@login_required(login_url='login')
+def update_about_me(request, user_username):
+    if request.method == 'POST':
+        try:
+            new_about_me = request.POST.get('about_me')
+            if not new_about_me:
+                return JsonResponse({'error': 'Description is required'}, status=400)
+
+            user = get_object_or_404(User, username=user_username)
+            # Ensure the logged-in user is the one being updated
+            if request.user != user:
+                return JsonResponse({'error': 'You are not allowed to update this user\'s profile'}, status=403)
+            
+            user.profile.about_me = new_about_me
+            user.profile.save()
+
+            return JsonResponse({'about_me': user.profile.about_me})
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 # View to edit your own profile
 @login_required(login_url='login')
@@ -168,27 +192,68 @@ def album_detail(request, album_id):
     photos = album.photos.all()
     return render(request, 'blog/album_detail.html', {'album': album, 'photos': photos})
 
-# View to edit an existing album
+# # View to edit an existing album
+# @login_required(login_url='login')
+# def edit_album(request, album_id):
+#     album = get_object_or_404(Album, id=album_id)
+
+#     # Check if the user is the owner of the album
+#     if album.owner != request.user:
+#         messages.error(request, 'You are not allowed to edit that album.')
+#         return redirect(reverse('post_list'))
+
+#     if request.method == 'POST':
+#         form = AlbumForm(request.POST, instance=album)
+#         if form.is_valid():
+#             album = form.save(commit=False)
+#             album.owner = request.user
+#             album.save()
+#             return redirect('album_detail', album_id=album.id)
+
+#     else:
+#         form = AlbumForm(instance=album)
+#     return render(request, 'blog/edit_album.html', {'form': form, 'album': album})
+
+# View to edit the title of an album
 @login_required(login_url='login')
-def edit_album(request, album_id):
-    album = get_object_or_404(Album, id=album_id)
-
-    # Check if the user is the owner of the album
-    if album.owner != request.user:
-        messages.error(request, 'You are not allowed to edit that album.')
-        return redirect(reverse('post_list'))
-
+def update_album_title(request, album_id):
     if request.method == 'POST':
-        form = AlbumForm(request.POST, instance=album)
-        if form.is_valid():
-            album = form.save(commit=False)
-            album.owner = request.user
-            album.save()
-            return redirect('album_detail', album_id=album.id)
+        try:
+            new_title = request.POST.get('title')
+            if not new_title:
+                return JsonResponse({'error': 'Title is required'}, status=400)
 
-    else:
-        form = AlbumForm(instance=album)
-    return render(request, 'blog/edit_album.html', {'form': form, 'album': album})
+            album = get_object_or_404(Album, id=album_id)
+
+            album.title = new_title
+            album.save()
+
+            return JsonResponse({'title': album.title})
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+# View to update the description of an album
+@login_required(login_url='login')
+def update_album_description(request, album_id):
+    if request.method == 'POST':
+        try:
+            new_description = request.POST.get('description')
+            if not new_description:
+                return JsonResponse({'error': 'Description is required'}, status=400)
+
+            album = get_object_or_404(Album, id=album_id)
+
+            album.description = new_description
+            album.save()
+
+            return JsonResponse({'description': album.description})
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 @login_required(login_url='login')
 def delete_photo(request, photo_id):
