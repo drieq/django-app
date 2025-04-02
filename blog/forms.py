@@ -22,6 +22,15 @@ class RegistrationForm(UserCreationForm):
         model = User
         fields = ['username', 'email', 'password1', 'password2']
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+
+        # Check if the email already exists
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Email already exists.")
+
+        return email
+
 class AlbumForm(forms.ModelForm):
     class Meta:
         model = Album

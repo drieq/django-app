@@ -4,22 +4,34 @@
     <!-- Album Title Section -->
     <div class="d-flex align-items-center">
         <h2 id="album-title" class="">{{ album.title }}</h2>
-        <input type="text" id="album-title-input" value="{{ album.title }}" class="form-control" style="display:none; width: 300px; font-size: 26px;"/>
-        <button id="edit-title-btn" class="btn btn-link text-primary ms-0" style="display:block;"><i class="bi bi-pencil"></i></button>
+        {% if is_photographer %}
+            <input type="text" id="album-title-input" value="{{ album.title }}" class="form-control" style="display:none; width: 300px; font-size: 26px;"/>
+            <button id="edit-title-btn" class="btn btn-link text-primary ms-0" style="display:block;"><i class="bi bi-pencil"></i></button>
+        {% endif %}
     </div>
 
     <!-- Album Description Section -->
     <div class="d-flex align-items-center mt-3">
         <p id="album-description" class="" style="max-width: 500px;">{{ album.description }}</p>
-        <textarea id="album-description-input" class="form-control mb-3" style="display:none; max-width:500px; height:150px;">{{ album.description }}</textarea>
-        <button id="edit-description-btn" class="btn btn-link text-primary" style="display:block;"><i class="bi bi-pencil"></i></button>
+        {% if is_photographer %}
+            <textarea id="album-description-input" class="form-control mb-3" style="display:none; max-width:500px; height:150px;">{{ album.description }}</textarea>
+            <button id="edit-description-btn" class="btn btn-link text-primary" style="display:block;"><i class="bi bi-pencil"></i></button>
+        {% endif %}
     </div>
 
     {% csrf_token %}
 
-    <a class="btn btn-primary" href="{% url 'upload_photos' album.id %}">
-        <i class="bi bi-upload"></i> Upload Photos</a>
+    {% if is_photographer %}
+        <a id="uploadPhotosBtn" class="btn btn-primary" href="{% url 'upload_photos' album.id %}">
+            <i class="bi bi-upload"></i> Upload Photos</a>
+        <div id="message" style="display:none; color:red;"></div>
+
+        <a onclick="confirmDeleteAlbum('{{ album.id }}')" class="btn btn-outline-danger">
+            <i class="bi bi-trash"></i> Delete Album</a>
+    {% endif %}
+
     <h3 class="mt-5">Photos in this album:</h3>
+
     <div class="row album-photos">
         {% for photo in photos %}
         <div class="col card p-0">
@@ -28,7 +40,7 @@
             </a>
                 <div class="photo-details p-2">
                     <span>{{ photo.caption }}</span>
-                    <button class="btn btn-light" onclick="confirmDelete('{{ photo.id }}')">
+                    <button class="btn btn-light" onclick="confirmDeletePhoto('{{ photo.id }}')">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -39,10 +51,17 @@
 
     <script type="text/javascript">
         // Function to confirm the deletion of an image
-        function confirmDelete(photoId) {
+        function confirmDeletePhoto(photoId) {
             if (confirm("Are you sure you want to delete this photo?")) {
                 // Redirect to the delete URL for that specific photo
                 window.location.href = '/delete_photo/' + photoId + '/';
+            }
+        }
+
+        function confirmDeleteAlbum(albumId) {
+            if (confirm("Are you sure you want to delete this album and all its photos?")) {
+                // Redirect to the delete URL for that specific album
+                window.location.href = '/delete_album/' + albumId + '/';
             }
         }
     </script>
@@ -178,4 +197,43 @@
 
     </script>
 
+{% endblock %}
+
+
+
+{% block extra_js %}
+    <script>
+        document.getElementById("uploadPhotosBtn").addEventListener("click", function(event) {
+            // Send AJAX request to check if the user can upload photos
+            fetch("{% url 'album_detail' album_id=album.id %}", {
+                method: "GET",
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const messageDiv = document.getElementById("message");
+
+                // Display the appropriate message based on the response
+                if (data.error) {
+                    messageDiv.textContent = data.error;  // Show error message
+                    messageDiv.style.color = "red";
+                } else if (data.success) {
+                    messageDiv.textContent = data.success;  // Show success message
+                    messageDiv.style.color = "green";
+                }
+
+                // Show the message on the page
+                messageDiv.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const messageDiv = document.getElementById("message");
+                messageDiv.textContent = "An unexpected error occurred.";
+                messageDiv.style.color = "red";
+                messageDiv.style.display = 'block';
+            });
+        });
+    </script>
 {% endblock %}

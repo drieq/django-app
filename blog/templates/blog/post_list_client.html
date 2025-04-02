@@ -1,0 +1,63 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+
+<div class="row">
+
+    {% if request.user.groups.all.0.name == "Photographers" %}
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+        <a href="{% url 'create_album' %}" class="btn btn-primary">
+            <i class="bi bi-folder-plus"></i> New Album
+        </a>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+        <a href="{% url 'create_client' %}">Add a Client</a>
+    </div>
+    {% endif %}
+
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == "error" %}
+
+                <div id="messages" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Whoops!</strong> {{message}}
+
+            {% endif %}
+            {% if message.tags == "success" %}
+
+                <div id="messages" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Yay!</strong> {{message}}
+
+            {% endif %}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+        {% endfor %}
+    {% endif %}
+
+    <h1>Shared Albums</h1>
+
+    <div class="album-container row">
+
+        {% for album in shared_albums %}
+
+        <a href="{% url 'album_detail' album_id=album.pk %}"
+        class="album col bg-light">
+            <article class="col bg-light">
+                <img src="{{ album.photos.first.thumbnail.url }}" alt="{{ album.photos.first.caption }}" width="200">
+                <div class="album-info">
+                    <h2>{{ album.title }}</h2>
+                    <p class="published-date">Created on: {{ album.created_at }}</p>
+                </div>
+            </article>
+        </a>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock %}

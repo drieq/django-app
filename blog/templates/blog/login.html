@@ -2,6 +2,26 @@
 
 {% block content %}
 
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == "error" %}
+
+                <div id="messages" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Whoops!</strong> {{message}}
+
+            {% endif %}
+            {% if message.tags == "success" %}
+
+                <div id="messages" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Yay!</strong> {{message}}
+
+            {% endif %}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+        {% endfor %}
+    {% endif %}
+
 <div class="d-flex justify-content-center h-100">
     <div class="user_card">
 
@@ -27,14 +47,6 @@
                 <input type="submit" name="Log in" value="Log in" class="btn btn-success">
             </form>
         </div>
-
-        {% for message in messages %}
-
-            <p id="messages">
-                {{message}}
-            </p>
-
-        {% endfor %}
 
     </div>
 
