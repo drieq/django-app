@@ -209,16 +209,60 @@ def upload_photos(request, album_id):
     if request.method == 'POST':
         formset = modelformset_factory(Photo, form=PhotoForm, extra=0)
         files = request.FILES.getlist('images')
+        uploaded_photos = []
+        success = True
 
         for file in files:
-            photo = Photo(album=album, image=file, caption=file.name)
-            photo.save()
-
-        return redirect('album_detail', album_id=album.id)
+            try:
+                photo = Photo(album=album, image=file, caption=file.name)
+                photo.save()
+                uploaded_photos.append({
+                    'id': photo.id,
+                    'url': photo.image.url,
+                    'caption': photo.caption,
+                })
+            except Exception as e:
+                success = False
+                print(f"Error uploading photo {file.name}: {e}")
+            
+        if success:
+            return redirect('album_detail', album_id=album.id)
+        else:
+            return JsonResponse({'error': 'Some photos could not be uploaded.'}, status=500)
     else:
         formset = PhotoForm()
 
     return render(request, 'blog/upload_photos.html', {'formset': formset, 'album': album})
+
+
+        # if request.FILES.getlist('images'):
+
+        #     uploaded_photos = []
+        #     for image in request.FILES.getlist('images'):
+        #         photo = Photo.objects.create(album=album, image=image)
+        #         uploaded_photos.append({
+        #             'id': photo.id,
+        #             'url': photo.image.url,
+        #         })
+        #     print("Uploaded photos list:", uploaded_photos)  # Debugging line
+        #     return JsonResponse({'uploaded_photos': uploaded_photos})
+        
+        # return JsonResponse({'error': 'Invalid requesttt'}, status=400)
+
+    # -----------------------------
+
+    #     formset = modelformset_factory(Photo, form=PhotoForm, extra=0)
+    #     files = request.FILES.getlist('images')
+
+    #     for file in files:
+    #         photo = Photo(album=album, image=file, caption=file.name)
+    #         photo.save()
+
+    #     return redirect('album_detail', album_id=album.id)
+    # else:
+    #     formset = PhotoForm()
+
+    # return render(request, 'blog/upload_photos.html', {'formset': formset, 'album': album})
 
 # View to display album details (Accessible by both photographers and clients)
 @login_required(login_url='login')
