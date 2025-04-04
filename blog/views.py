@@ -15,8 +15,10 @@ from django.utils.html import escape
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_POST
 from .models import Profile, Post, Album, Photo
 from .forms import PostForm, RegistrationForm, PhotoForm, AlbumForm, EditProfileForm, ClientRegistrationForm
+import json
 
 # Helper function to check if the user is a photographer
 def is_photographer(user):
@@ -216,7 +218,10 @@ def upload_photos(request, album_id):
 
         for file in files:
             try:
-                photo = Photo(album=album, image=file, caption=file.name)
+                photo = Photo(album=album,
+                              image=file,
+                              caption=file.name,
+                              order=album.photos.count() + 1)
                 photo.save()
                 uploaded_photos.append({
                     'id': photo.id,
@@ -288,8 +293,26 @@ def album_detail(request, album_id):
         messages.error(request, "You do not have access to this album.")
         return redirect(reverse('post_list'))
 
-    photos = album.photos.all()
+    # photos = album.photos.all()
+    photos = album.photos.order_by('order', 'id')
+
     return render(request, 'blog/album_detail.html', {'album': album, 'photos': photos, 'is_photographer': is_photographer})
+
+@login_required(login_url='login')
+@require_POST
+def reorder_photos(request, album_id):
+    album = get_object_or_404(Album, id=album_id, owner=request.user)
+
+    try:
+        data = json.loads(request.body)
+        photo_ids = data.get('order', [])
+
+        for index, photo_id in enumerate(photo_ids):
+            Photo.objects.filter(id=photo_id, album=album).update(order=index)
+
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 @login_required(login_url='login')
 def photo_detail(request, photo_id):

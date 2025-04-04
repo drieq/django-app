@@ -28,6 +28,7 @@ urlpatterns = [
     path('album/<int:album_id>/update-description/', views.update_album_description, name='update_album_description'),
     path('delete_album/<int:album_id>/', views.delete_album, name='delete_album'),
     path('album/<int:album_id>/upload/', views.upload_photos, name='upload_photos'),
+    path('album/<int:album_id>/reorder/', views.reorder_photos, name='reorder_photos'),
 
     # Photo URLs
     path('delete_photo/<int:photo_id>/', views.delete_photo, name='delete_photo'),

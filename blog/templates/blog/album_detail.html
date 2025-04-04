@@ -45,7 +45,7 @@
 
     <div class="row album-photos" id="photo-list">
         {% for photo in photos %}
-        <div class="col card p-0">
+        <div class="photo-item col card p-0" data-id="{{ photo.id }}">
             <a href="{% url 'photo_detail' photo.id %}">
                 <img src="{{ photo.thumbnail.url }}?v={ photo.uploaded_at.timestamp }}" alt="{{ photo.caption }}" width="100" />
             </a>
@@ -219,8 +219,9 @@
         align-items:center;
     }
     #drop-area p {
-        margin: 0;
+        margin: 50px 0;
         opacity: .7;
+
     }
     #drop-area.highlight {
         border: 2px dashed rgba(251, 0, 255, 0.716);
@@ -397,6 +398,39 @@
             });
         });
     </script>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const container = document.getElementById('photo-list');
+
+    const sortable = new Sortable(container, {
+      animation: 250,
+      onEnd: function () {
+        const orderedIds = [...container.querySelectorAll('.photo-item')].map(el => el.dataset.id);
+
+        fetch("{% url 'reorder_photos' album.id %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ order: orderedIds })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            alert('Failed to update photo order.');
+          }
+        })
+        .catch(error => {
+          console.error('Reorder failed:', error);
+        });
+      }
+    });
+  });
+</script>
+
 
 
 {% endblock %}

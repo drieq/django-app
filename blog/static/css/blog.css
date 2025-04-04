@@ -103,7 +103,8 @@ a {
     width: 100px;
     height: 100%;
     object-fit: cover;
-    border-radius: 16px 0 0 16px;;
+    border-radius: 16px 0 0 16px;
+    margin: 0;
 }
 
 .album .album-info {
@@ -137,7 +138,8 @@ a {
 .album-photos .col img {
     width: 100%;
     height: 200px;
-    object-fit: cover;;
+    object-fit: cover;
+    margin: 0;
 }
 
 .album-photos .col .photo-details {

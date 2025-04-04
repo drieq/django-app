@@ -58,6 +58,10 @@ class Photo(models.Model):
     thumbnail = models.ImageField(upload_to='thumbnails/%Y/%m/%d/', blank=True, null=True)
     caption = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
 
     def save(self, *args, **kwargs):
         # Set caption to the filename if it's not set already (on first save)
