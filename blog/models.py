@@ -71,11 +71,15 @@ class Photo(models.Model):
 
         image = Image.open(self.image) # Open the image file
 
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+
         image.thumbnail((200, 200))  # Create a thumbnail with max size of 200x200
 
         thumb_name = f"thumb_{os.path.basename(self.image.name)}"
         thumb_io = BytesIO()
-        image.save(thumb_io, format='JPEG')
+        image.save(thumb_io, format='JPEG', quality=85)
+
         thumb_file = ContentFile(thumb_io.getvalue())
 
         self.thumbnail.save(thumb_name, thumb_file, save=False)

@@ -43,18 +43,18 @@
 
         imageInput.addEventListener('change', function(event) {
             const files = event.target.files;
-            
+
             // Clear the preview container before adding new previews
             previewContainer.innerHTML = '';
 
             // Loop through each selected file
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                
+
                 if (file && file.type.startsWith('image/')) {
                     // Create a new FileReader to read the image file
                     const reader = new FileReader();
-                    
+
                     // Define what happens once the file is read
                     reader.onload = function(e) {
                         const img = document.createElement('img');
@@ -63,10 +63,10 @@
                         img.style.marginRight = '10px'; // Optional: Add space between images
                         img.style.marginBottom = '10px'; // Optional: Add space between images
                         img.alt = "Image Preview";
-                        
+
                         previewContainer.appendChild(img);  // Append the preview image to the container
                     };
-                    
+
                     // Read the image file
                     reader.readAsDataURL(file);
                 }
@@ -82,28 +82,29 @@
         const uploadBtn = document.getElementById("upload-btn");
         const preview = document.getElementById("preview");
         const uploadUrl = "{% url 'upload_photos' album.id %}";
-    
+
         let files = [];
-    
+
         dropArea.addEventListener("dragover", (e) => {
             e.preventDefault();
             dropArea.classList.add("highlight");
         });
-    
+
         dropArea.addEventListener("dragleave", () => dropArea.classList.remove("highlight"));
-    
+
         dropArea.addEventListener("drop", (e) => {
             e.preventDefault();
             dropArea.classList.remove("highlight");
             handleFiles(e.dataTransfer.files);
         });
-    
+
         fileInput.addEventListener("change", () => handleFiles(fileInput.files));
-    
+
         function handleFiles(selectedFiles) {
-            files = [...selectedFiles];
+            files = [...files, ...selectedFiles];
             preview.innerHTML = "";
-            files.forEach(file => {
+
+            files.forEach((file) => {
                 if (file && file.type.startsWith("image/")) {
                     const reader = new FileReader();
 
@@ -112,7 +113,7 @@
                         img.src = e.target.result;
                         img.style.maxWidth = "100px";
                         img.style.margin = "5px";
-                        img.alt = "Image Preview";
+                        // img.alt = "Image Preview";
                         preview.appendChild(img);
                     };
 
@@ -121,12 +122,14 @@
             });
             uploadBtn.disabled = files.length === 0;
         }
-    
+
         uploadBtn.addEventListener("click", () => {
+
             if (files.length === 0) return;
+
             const formData = new FormData();
-            files.forEach(file => formData.append("images", file));
-    
+            files.forEach((file) => formData.append("images", file));
+
             fetch(uploadUrl, {
                 method: "POST",
                 body: formData,
@@ -142,7 +145,10 @@
                 } else {
                     alert("Upload failed.");
                 }
-            }).catch(error => console.error("Error:", error));
+            })
+            .catch(error => {
+                console.error("Upload error:", error);
+            });
         });
     });
 </script>

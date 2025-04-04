@@ -22,28 +22,39 @@
     {% csrf_token %}
 
     {% if is_photographer %}
-        <a id="uploadPhotosBtn" class="btn btn-primary" href="{% url 'upload_photos' album.id %}">
-            <i class="bi bi-upload"></i> Upload Photos</a>
+        <button id="upload-btn" class="btn btn-primary">
+            <i class="bi bi-upload"></i> Upload Photos</button>
         <div id="message" style="display:none; color:red;"></div>
 
         <a onclick="confirmDeleteAlbum('{{ album.id }}')" class="btn btn-outline-danger">
             <i class="bi bi-trash"></i> Delete Album</a>
+
+        <div id="upload-area" style="display:none;">
+            <div id="drop-area">
+                <p>Drag & Drop images here or <label for="file-input" class="file-label">browse</label></p>
+                <input type="file" id="file-input" multiple accept="image/*" style="display: none;">
+            </div>
+
+            <div id="preview"></div>
+            <button id="start-upload" class="btn btn-success" disabled>Upload</button>
+        </div>
+
     {% endif %}
 
     <h3 class="mt-5">Photos in this album:</h3>
 
-    <div class="row album-photos">
+    <div class="row album-photos" id="photo-list">
         {% for photo in photos %}
         <div class="col card p-0">
             <a href="{% url 'photo_detail' photo.id %}">
-                <img src="{{ photo.thumbnail.url }}" alt="{{ photo.caption }}" width="100" />
+                <img src="{{ photo.thumbnail.url }}?v={ photo.uploaded_at.timestamp }}" alt="{{ photo.caption }}" width="100" />
             </a>
-                <div class="photo-details p-2">
-                    <span>{{ photo.caption }}</span>
-                    <button class="btn btn-light" onclick="confirmDeletePhoto('{{ photo.id }}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
+            <div class="photo-details p-2">
+                <span>{{ photo.caption }}</span>
+                <button class="btn btn-light" onclick="confirmDeletePhoto('{{ photo.id }}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
         </div>
         {% endfor %}
     </div>
@@ -76,7 +87,7 @@
                 $("#album-title").hide();  // Hide the current title
                 $("#album-title-input").show();  // Show the input for editing
                 $("#album-title-input").focus();  // Focus on the input field
-                
+
                 // Move the type cursor to the end of the input field
                 var input = $("#album-title-input");
                 input.val(input.val());  // Set the value to itself to trigger the cursor to the end
@@ -94,7 +105,7 @@
                 var input = $("#album-description-input");
                 input.val(input.val());  // Set the value to itself to trigger the cursor to the end
                 input[0].setSelectionRange(input.val().length, input.val().length);
-                
+
             });
 
             // Trigger when the input loses focus (blur)
@@ -197,43 +208,195 @@
 
     </script>
 
+    <style>
+    #drop-area {
+        border: 2px dashed rgba(120, 65, 121, 0.201);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        align-items:center;
+    }
+    #drop-area p {
+        margin: 0;
+        opacity: .7;
+    }
+    #drop-area.highlight {
+        border: 2px dashed rgba(251, 0, 255, 0.716);
+    }
+    .file-label {
+        color: blue;
+        cursor: pointer;
+    }
+    img {
+        display: inline-block;
+        margin: 5px;
+    }
+</style>
+
 {% endblock %}
 
 
 
 {% block extra_js %}
     <script>
-        document.getElementById("uploadPhotosBtn").addEventListener("click", function(event) {
-            // Send AJAX request to check if the user can upload photos
-            fetch("{% url 'album_detail' album_id=album.id %}", {
-                method: "GET",
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const messageDiv = document.getElementById("message");
+    //     document.getElementById("upload-btn").addEventListener("click", function(event) {
+    //         // Send AJAX request to check if the user can upload photos
+    //         fetch("{% url 'album_detail' album_id=album.id %}", {
+    //             method: "GET",
+    //             headers: {
+    //                 'X-Requested-With': 'XMLHttpRequest'
+    //             }
+    //         })
+    //         .then(response => response.json())
+    //         .then(data => {
+    //             const messageDiv = document.getElementById("message");
 
-                // Display the appropriate message based on the response
-                if (data.error) {
-                    messageDiv.textContent = data.error;  // Show error message
-                    messageDiv.style.color = "red";
-                } else if (data.success) {
-                    messageDiv.textContent = data.success;  // Show success message
-                    messageDiv.style.color = "green";
-                }
+    //             // Display the appropriate message based on the response
+    //             if (data.error) {
+    //                 messageDiv.textContent = data.error;  // Show error message
+    //                 messageDiv.style.color = "red";
+    //             } else if (data.success) {
+    //                 messageDiv.textContent = data.success;  // Show success message
+    //                 messageDiv.style.color = "green";
+    //             }
 
-                // Show the message on the page
-                messageDiv.style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const messageDiv = document.getElementById("message");
-                messageDiv.textContent = "An unexpected error occurred.";
-                messageDiv.style.color = "red";
-                messageDiv.style.display = 'block';
+    //             // Show the message on the page
+    //             messageDiv.style.display = 'block';
+    //         })
+    //         .catch(error => {
+    //             console.error('Error:', error);
+    //             const messageDiv = document.getElementById("message");
+    //             messageDiv.textContent = "An unexpected error occurred.";
+    //             messageDiv.style.color = "red";
+    //             messageDiv.style.display = 'block';
+    //         });
+    //     });
+</script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const uploadBtn = document.getElementById("upload-btn");
+            const uploadArea = document.getElementById("upload-area");
+            const dropArea = document.getElementById("drop-area");
+            const fileInput = document.getElementById("file-input");
+            const preview = document.getElementById("preview");
+            const startUploadBtn = document.getElementById("start-upload");
+            const uploadUrl = "{% url 'upload_photos' album.id %}";
+
+            let files = [];
+
+            // Show the upload area when the user clicks "Upload Photos"
+            uploadBtn.addEventListener("click", () => {
+                if (files.length === 0 && uploadArea.style.display === "block") {
+                    // No files and upload area is already open → close it
+                    uploadArea.style.display = "none";
+                } else {
+                    // Otherwise, show the upload area
+                    uploadArea.style.display = "block";
+                }
+            });
+
+            // Handle drag-and-drop files
+            dropArea.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                dropArea.classList.add("highlight");
+            });
+
+            dropArea.addEventListener("dragleave", () => dropArea.classList.remove("highlight"));
+
+            dropArea.addEventListener("drop", (e) => {
+                e.preventDefault();
+                dropArea.classList.remove("highlight");
+                handleFiles(e.dataTransfer.files);
+            });
+
+            // Handle file selection from input
+            fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+
+            function handleFiles(selectedFiles) {
+                files = [...files, ...selectedFiles];
+                preview.innerHTML = "";
+
+                files.forEach((file) => {
+                    if (file && file.type.startsWith("image/")) {
+                        const reader = new FileReader();
+
+                        reader.onload = function(e) {
+                            const img = document.createElement("img");
+                            img.src = e.target.result;
+                            img.style.maxWidth = "100px";
+                            img.style.margin = "5px";
+                            preview.appendChild(img);
+                        };
+
+                        reader.readAsDataURL(file);
+                    }
+                });
+                startUploadBtn.disabled = files.length === 0;
+            }
+
+            // Upload the files when the user clicks "Start Upload"
+            startUploadBtn.addEventListener("click", () => {
+                if (files.length === 0) return;
+
+                const formData = new FormData();
+                files.forEach((file) => formData.append("images", file));
+
+                fetch(uploadUrl, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                    }
+                })
+                .then(response => {
+                    // Check if the response status is OK (2xx)
+                    if (!response.ok) {
+                        throw new Error('Failed to upload photos');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.uploaded_photos) {
+                        // Dynamically add the uploaded photos to the photo list
+                        const photoList = document.getElementById("photo-list");
+
+                        // data.uploaded_photos.forEach(photo => {
+                        //     const img = document.createElement("img");
+                        //     img.src = photo.url;
+                        //     img.alt = photo.caption;
+                        //     img.style.maxWidth = "100px";
+                        //     img.style.margin = "5px";
+                        //     photoList.appendChild(img);
+                        // });
+
+                        // Clear the file list and hide the upload area
+                        files = [];
+                        preview.innerHTML = "";
+                        uploadArea.style.display = "none";
+                    } else {
+                        alert("Upload failed.");
+                    }
+
+                    if (data.rendered_html) {
+                        const wrapper = document.createElement("div");
+                        wrapper.innerHTML = data.rendered_html;
+                        const photoList = document.getElementById("photo-list");
+                        // Append each child node (in case multiple elements inside)
+                        Array.from(wrapper.children).forEach(child => {
+                            photoList.appendChild(child);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Upload error:", error);
+                    alert("An error occurred. Please try again.");
+                });
             });
         });
     </script>
+
+
 {% endblock %}

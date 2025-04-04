@@ -45,12 +45,12 @@ def post_list(request):
 
         albums = Album.objects.filter(owner=request.user).order_by('created_at')
         return render(request, 'blog/post_list.html', {'albums': albums})
-    
+
     elif request.user.groups.filter(name="Clients").exists():
 
         shared_albums = Album.objects.filter(clients=request.user)
         return render(request, 'blog/post_list_client.html', {'shared_albums': shared_albums})
-    
+
     albums = {}
     return render(request, 'blog/post_list.html', {'albums': albums})
 
@@ -175,7 +175,7 @@ def delete_photo(request, photo_id):
     else:
         # If the user is not the owner, redirect them or raise an error
         return redirect('album_detail', album_id=photo.album.id)
-    
+
 @login_required(login_url='login')
 @user_passes_test(is_photographer)
 def delete_album(request, album_id):
@@ -188,7 +188,7 @@ def delete_album(request, album_id):
         for photo in album.photos.all():
             photo.image.delete()
             photo.delete()
-        
+
         album.delete()
 
         return redirect(reverse('post_list'))
@@ -207,9 +207,11 @@ def upload_photos(request, album_id):
         return JsonResponse({'error': 'You are not authorized to upload photos.'}, status=403)
 
     if request.method == 'POST':
-        formset = modelformset_factory(Photo, form=PhotoForm, extra=0)
+        # formset = modelformset_factory(Photo, form=PhotoForm, extra=0)
         files = request.FILES.getlist('images')
         uploaded_photos = []
+
+        rendered_html = []
         success = True
 
         for file in files:
@@ -221,12 +223,20 @@ def upload_photos(request, album_id):
                     'url': photo.image.url,
                     'caption': photo.caption,
                 })
+
+                photo_html = render_to_string("blog/partials/photo_card.html", {
+                    "photo": photo
+                }, request=request)
+
+                rendered_html.append(photo_html)
+
+
             except Exception as e:
                 success = False
                 print(f"Error uploading photo {file.name}: {e}")
-            
+
         if success:
-            return redirect('album_detail', album_id=album.id)
+            return JsonResponse({'uploaded_photos': uploaded_photos, "rendered_html": rendered_html})
         else:
             return JsonResponse({'error': 'Some photos could not be uploaded.'}, status=500)
     else:
@@ -246,7 +256,7 @@ def upload_photos(request, album_id):
         #         })
         #     print("Uploaded photos list:", uploaded_photos)  # Debugging line
         #     return JsonResponse({'uploaded_photos': uploaded_photos})
-        
+
         # return JsonResponse({'error': 'Invalid requesttt'}, status=400)
 
     # -----------------------------
@@ -313,7 +323,7 @@ def registerPage(request):
 
     if request.user.is_authenticated:
         return redirect(reverse('post_list'))
-        
+
     form = RegistrationForm()
 
     if request.method == 'POST':
@@ -337,7 +347,7 @@ def registerPage(request):
             send_mail(mail_subject, message, settings.EMAIL_HOST_USER, [user.email])
             messages.success(request, 'Please check your email to activate your account.')
             return redirect(reverse('login'))
-        
+
     context = {'form': form}
     return render(request, 'blog/register.html', context)
 
@@ -365,7 +375,7 @@ def loginPage(request):
 
     if request.user.is_authenticated:
         return redirect(reverse('post_list'))
-    
+
     if request.method == 'POST':
         username = escape(request.POST.get('username'))
         password = request.POST.get('password')

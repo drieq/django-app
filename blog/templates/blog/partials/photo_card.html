@@ -1,0 +1,11 @@
+<div class="col card p-0">
+    <a href="{% url 'photo_detail' photo.id %}">
+        <img src="{{ photo.thumbnail.url }}?v={ photo.uploaded_at.timestamp }}" alt="{{ photo.caption }}" width="100" />
+    </a>
+    <div class="photo-details p-2">
+        <span>{{ photo.caption }}</span>
+        <button class="btn btn-light" onclick="confirmDeletePhoto('{{ photo.id }}')">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+</div>
