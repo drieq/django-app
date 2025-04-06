@@ -231,3 +231,49 @@ a {
 .username-container h2 {
     margin-bottom: 0;
 }
+
+/* Optional: style the ghost element for nicer dragging */
+.sortable-ghost {
+    opacity: 0.5;
+    transform: scale(0.98);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Optional: make it obvious which one is being dragged */
+.sortable-chosen {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transform: rotate(1deg);
+}
+
+.photo-item {
+cursor: grab;
+}
+
+.photo-item img {
+pointer-events: none;
+}
+
+.editable {
+    border: 1px solid #eee;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    cursor: text;
+    width: max-content;
+  }
+  
+  .editable:focus {
+    border: 1px dashed #999;
+    background-color: #fdfdfd;
+    outline: none;
+  }
+  
+  .editable::before {
+    content: attr(data-placeholder);
+    color: #aaa;
+    display: none;
+  }
+  
+  .editable:empty::before {
+    display: inline;
+  }

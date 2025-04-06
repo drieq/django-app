@@ -29,9 +29,12 @@ urlpatterns = [
     path('delete_album/<int:album_id>/', views.delete_album, name='delete_album'),
     path('album/<int:album_id>/upload/', views.upload_photos, name='upload_photos'),
     path('album/<int:album_id>/reorder/', views.reorder_photos, name='reorder_photos'),
+    path('get-tags/', views.get_tags, name='get_tags'),
+    path('update-album-tags/<int:album_id>/', views.update_album_tags, name='update_album_tags'),
 
     # Photo URLs
     path('delete_photo/<int:photo_id>/', views.delete_photo, name='delete_photo'),
+    path('photo/<int:photo_id>/update-caption/', views.update_caption, name='update_caption'),
     path('photo/<int:photo_id>/', views.photo_detail, name='photo_detail'),
 ]
 

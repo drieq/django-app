@@ -39,6 +39,7 @@ class Album(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='albums')
     clients = models.ManyToManyField(User, related_name="accessible_albums", blank=True)
+    tags = models.ManyToManyField('Tag', blank=True, related_name='albums')
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -50,6 +51,12 @@ class Album(models.Model):
 
     def __str__(self):
         return self.title
+    
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
 
 # Photo model to store images and their metadata
 class Photo(models.Model):

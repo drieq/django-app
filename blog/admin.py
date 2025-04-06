@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
-from .models import Profile, Post, Album, Photo
+from .models import Profile, Post, Album, Photo, Tag
 
 class AlbumAdmin(admin.ModelAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
@@ -17,3 +17,4 @@ admin.site.register(Profile)
 admin.site.register(Post)
 admin.site.register(Album, AlbumAdmin)
 admin.site.register(Photo)
+admin.site.register(Tag)

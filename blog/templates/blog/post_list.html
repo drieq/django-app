@@ -1,4 +1,5 @@
 {% extends 'blog/base.html' %}
+{% load static %}
 
 {% block content %}
 
@@ -47,7 +48,11 @@
         <a href="{% url 'album_detail' album_id=album.pk %}"
         class="album col bg-light">
             <article class="col bg-light">
-                <img src="{{ album.photos.first.thumbnail.url }}" alt="{{ album.photos.first.caption }}" width="200">
+                {% if album.photos.first %}
+                    <img src="{{ album.photos.first.thumbnail.url }}" alt="{{ album.photos.first.caption }}" width="200">
+                {% else %}
+                    <img src="{% static 'images/placeholder.png' %}" alt="Placeholder" width="200">
+                {% endif %}
                 <div class="album-info">
                     <h2>{{ album.title }}</h2>
                     <p class="published-date">Created on: {{ album.created_at }}</p>

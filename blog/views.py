@@ -16,7 +16,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
-from .models import Profile, Post, Album, Photo
+from .models import Profile, Post, Album, Photo, Tag
 from .forms import PostForm, RegistrationForm, PhotoForm, AlbumForm, EditProfileForm, ClientRegistrationForm
 import json
 
@@ -107,11 +107,9 @@ def post_new(request):
 @user_passes_test(is_photographer)
 def create_album(request):
     if request.method == 'POST':
-        form = AlbumForm(request.POST)
+        form = AlbumForm(request.POST, request.FILES)
         if form.is_valid():
-            album = form.save(commit=False)
-            album.owner = request.user
-            album.save()
+            album = form.save(user=request.user)
             return redirect('album_detail', album_id=album.id)
     else:
         form = AlbumForm()
@@ -160,6 +158,24 @@ def update_album_description(request, album_id):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def get_tags(request):
+    query = request.GET.get('search', '')
+    tags = Tag.objects.filter(name__icontains=query)  # Case-insensitive search
+    tag_data = [{'name': tag.name} for tag in tags]
+    return JsonResponse(tag_data, safe=False)
+
+def update_album_tags(request, album_id):
+    if request.method == 'POST' and request.is_ajax():
+        album = get_object_or_404(Album, id=album_id)
+        tags_data = request.POST.get('tags', '').split(',')
+        tags = Tag.objects.filter(name__in=tags_data)  # Filter tags by names
+
+        album.tags.set(tags)  # Update the tags for the album
+        album.save()
+
+        return JsonResponse({'message': 'Tags updated successfully'}, status=200)
+    return JsonResponse({'message': 'Invalid request'}, status=400)
 
 @login_required(login_url='login')
 @user_passes_test(is_photographer)
@@ -278,6 +294,28 @@ def upload_photos(request, album_id):
     #     formset = PhotoForm()
 
     # return render(request, 'blog/upload_photos.html', {'formset': formset, 'album': album})
+
+@login_required(login_url='login')
+@require_POST
+def update_caption(request, photo_id):
+    try:
+        photo = Photo.objects.get(id=photo_id, album__owner=request.user)
+    except Photo.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Photo not found or access denied.'}, status=404)
+
+    try:
+        data = json.loads(request.body)
+        new_caption = data.get('caption', '').strip()
+
+        if new_caption:
+            photo.caption = new_caption
+            photo.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Caption cannot be empty.'}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 # View to display album details (Accessible by both photographers and clients)
 @login_required(login_url='login')

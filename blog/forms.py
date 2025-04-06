@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Profile, Post, Album, Photo
+from .models import Profile, Post, Album, Photo, Tag
 
 class EditProfileForm(forms.ModelForm):
 
@@ -32,9 +32,38 @@ class RegistrationForm(UserCreationForm):
         return email
 
 class AlbumForm(forms.ModelForm):
+    tags = forms.CharField(
+        widget=forms.TextInput(attrs={'placeholder': 'Add tags separated by commas'}),
+        required=False,
+        help_text="Enter tags separated by commas. Existing tags can be selected below."
+    )
+
     class Meta:
         model = Album
-        fields = ['title', 'description']
+        fields = ['title', 'description', 'tags']
+
+    def save(self, user=None, commit=True):
+        album = super().save(commit=False)
+
+        if user:
+            album.owner = user
+        else:
+            raise ValueError("Cannot find user, album requires an owner.")
+
+        if commit:
+            album.save()
+
+        # Handle tags
+        tag_names = self.cleaned_data['tags']
+        if tag_names:
+            tag_names = [name.strip() for name in tag_names.split(',')]
+            tags = []
+            for name in tag_names:
+                tag, created = Tag.objects.get_or_create(name=name)
+                tags.append(tag)
+            album.tags.set(tags)
+
+        return album
 
 class PhotoForm(forms.ModelForm):
     class Meta:

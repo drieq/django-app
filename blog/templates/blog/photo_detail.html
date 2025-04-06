@@ -8,8 +8,15 @@
 
     <div class="row mt-5">
         <div class="col">
-            <h2>{{ photo.caption }}</h2>
-            <h2>Image Metadata:</h2>
+            <h2 
+                    class="caption editable"
+                    contenteditable="true"
+                    data-id="{{ photo.id }}"
+                    spellcheck="false"
+                >
+                    {{ photo.caption }}
+            </h2>
+            <h3>Image Metadata:</h3>
             <!-- <ul>
                 {% if exif_metadata %}
                     {% for key, value in exif_metadata.items %}
@@ -31,5 +38,57 @@
             <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" class="img-fluid rounded" />
     </div>
 </div>
+
+{% endblock %}
+
+
+
+
+{% block extra_js %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.caption').forEach(captionEl => {
+        let originalText = captionEl.innerText;
+  
+        captionEl.addEventListener('blur', () => {
+          const newText = captionEl.innerText.trim();
+          const photoId = captionEl.dataset.id;
+  
+          if (newText && newText !== originalText) {
+            fetch(`/photo/${photoId}/update-caption/`, {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ caption: newText })
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                originalText = newText;
+              } else {
+                alert('Error updating caption');
+                captionEl.innerText = originalText;
+              }
+            })
+            .catch(err => {
+              console.error('Update failed', err);
+              captionEl.innerText = originalText;
+            });
+          }
+        });
+  
+        // Optional: press Enter to blur the caption field
+        captionEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            captionEl.blur();
+          }
+        });
+      });
+    });
+  </script>
 
 {% endblock %}

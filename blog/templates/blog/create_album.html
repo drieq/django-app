@@ -30,6 +30,101 @@
             {% endif %}
         </div>
 
+    <!-- Tags input with all tags displayed initially -->
+    <div class="mb-3">
+        <label for="tag_input">Tags</label>
+        <div class="tag-list">
+            <!-- Dynamically populated tags will appear here as buttons -->
+        </div>
+        <div id="selected-tags" class="mt-2"></div>
+    </div>
+
         <input type="submit" name="Save" value="Create Album" class="btn btn-success">
     </form>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const selectedTagsContainer = document.getElementById("selected-tags");
+    const tagListContainer = document.querySelector('.tag-list');
+    let selectedTags = [];
+
+    // Fetch available tags when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchTags("");  // Fetch all tags initially (empty search string)
+    });
+
+    // Fetch tags from the server
+    function fetchTags(query) {
+        console.log("Fetching tags for:", query);  // Debugging
+        fetch(`/get-tags/?search=${query}`)
+            .then(response => response.json())
+            .then(tags => {
+                console.log('Fetched tags:', tags);  // Debugging: Check if tags are fetched
+                tagListContainer.innerHTML = "";  // Clear previous tags
+
+                // Add all tags to the list as clickable buttons
+                tags.forEach(tag => {
+                    if (!selectedTags.includes(tag.name)) {  // Only show tags that are not already selected
+                        const button = document.createElement("button");
+                        button.className = "btn btn-outline-primary me-1 mb-1";
+                        button.textContent = tag.name;
+                        button.type = "button";  // Prevent form submission when the button is clicked
+                        button.onclick = () => toggleTagSelection(tag.name);
+                        tagListContainer.appendChild(button);
+                    }
+                });
+
+                // If the user has already selected tags, show them as badges
+                renderSelectedTags();
+            })
+            .catch(error => {
+                console.error("Error fetching tags:", error);  // Debugging
+            });
+    }
+
+    // Render selected tags as badges with the same style as original tags
+    function renderSelectedTags() {
+        selectedTagsContainer.innerHTML = "";  // Clear the current displayed tags
+
+        selectedTags.forEach(tagName => {
+            const badge = document.createElement("button");
+            badge.className = "btn btn-outline-primary me-1 mb-1"; // Same style as the original tag button
+            badge.textContent = tagName;
+            badge.type = "button";  // Prevent form submission when clicked
+            badge.addEventListener("click", () => {
+                selectedTags = selectedTags.filter(tag => tag !== tagName);
+                selectedTagsContainer.removeChild(badge);
+                fetchTags("");  // Re-fetch tags after removing
+            });
+            selectedTagsContainer.appendChild(badge);
+        });
+    }
+
+    // Toggle tag selection: Add or remove from the selected tags list
+    function toggleTagSelection(tagName) {
+        if (selectedTags.includes(tagName)) {
+            // If tag is already selected, remove it
+            selectedTags = selectedTags.filter(tag => tag !== tagName);
+        } else {
+            // If tag is not selected, add it
+            selectedTags.push(tagName);
+        }
+
+        // Re-fetch tags and update the display of selected tags
+        renderSelectedTags();
+        fetchTags("");  // Re-fetch tags to ensure the selected tag is removed from the list
+    }
+
+    // When form is submitted, send the selected tags to the backend
+    document.querySelector("form").addEventListener("submit", function (e) {
+        const hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.name = "tags";  // or "tags[]" if handling multiple
+        hiddenInput.value = selectedTags.join(",");  // Convert selected tags to a comma-separated string
+        e.target.appendChild(hiddenInput);
+    });
+</script>
 {% endblock %}

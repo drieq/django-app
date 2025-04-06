@@ -19,6 +19,21 @@
         {% endif %}
     </div>
 
+    <div class="d-flex align-items-center mb-3">
+        {% for tag in album.tags.all %}
+
+            <span class="badge rounded-pill text-bg-primary me-1" data-tag="{{ tag.name }}">
+                {{ tag.name }}
+            </span>
+
+        {% empty %}
+
+            <span>No tags</span>
+
+        {% endfor %}
+
+    </div>
+
     {% csrf_token %}
 
     {% if is_photographer %}
@@ -47,11 +62,18 @@
         {% for photo in photos %}
         <div class="photo-item col card p-0" data-id="{{ photo.id }}">
             <a href="{% url 'photo_detail' photo.id %}">
-                <img src="{{ photo.thumbnail.url }}?v={ photo.uploaded_at.timestamp }}" alt="{{ photo.caption }}" width="100" />
+                <img src="{{ photo.thumbnail.url }}?v={ photo.uploaded_at.timestamp }}" alt="{{ photo.caption }}" width="100" draggable="false"/>
             </a>
             <div class="photo-details p-2">
-                <span>{{ photo.caption }}</span>
-                <button class="btn btn-light" onclick="confirmDeletePhoto('{{ photo.id }}')">
+                <span 
+                    class="caption editable"
+                    contenteditable="true"
+                    data-id="{{ photo.id }}"
+                    spellcheck="false"
+                >
+                    {{ photo.caption }}
+                </span>
+                <button class="btn btn-outline-danger btn-sm" onclick="confirmDeletePhoto('{{ photo.id }}')">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
@@ -406,6 +428,14 @@
 
     const sortable = new Sortable(container, {
       animation: 250,
+      ghostClass: 'sortable-ghost',
+      dragClass: 'sortable-drag',
+      easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+      setData: function (dataTransfer, dragEl) {
+            const img = new Image();
+            img.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+            dataTransfer.setDragImage(img, 0, 0);
+        },
       onEnd: function () {
         const orderedIds = [...container.querySelectorAll('.photo-item')].map(el => el.dataset.id);
 
@@ -431,6 +461,49 @@
   });
 </script>
 
-
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.caption').forEach(captionEl => {
+        let originalText = captionEl.innerText;
+  
+        captionEl.addEventListener('blur', () => {
+          const newText = captionEl.innerText.trim();
+          const photoId = captionEl.dataset.id;
+  
+          if (newText && newText !== originalText) {
+            fetch(`/photo/${photoId}/update-caption/`, {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ caption: newText })
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                originalText = newText;
+              } else {
+                alert('Error updating caption');
+                captionEl.innerText = originalText;
+              }
+            })
+            .catch(err => {
+              console.error('Update failed', err);
+              captionEl.innerText = originalText;
+            });
+          }
+        });
+  
+        // Optional: press Enter to blur the caption field
+        captionEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            captionEl.blur();
+          }
+        });
+      });
+    });
+  </script>
 
 {% endblock %}
