@@ -116,6 +116,39 @@ def create_album(request):
 
     return render(request, 'blog/create_album.html', {'form': form})
 
+@login_required(login_url='login')
+def remove_album_tag(request, album_id):
+    if request.method == 'POST' and request.user.is_authenticated:
+        album = get_object_or_404(Album, id=album_id, owner=request.user)
+        try:
+            data = json.loads(request.body)
+            tag_name = data.get("tag")
+            tag = album.tags.get(name=tag_name)
+            album.tags.remove(tag)
+            return JsonResponse({'success': True})
+        except Exception as e:
+            print("Error removing tag:", e)
+            return JsonResponse({'success': False}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def add_album_tag(request, album_id):
+    if request.method == 'POST' and request.user.is_authenticated:
+        album = get_object_or_404(Album, id=album_id, owner=request.user)
+        try:
+            data = json.loads(request.body)
+            tag_name = data.get("tag")
+            tag = Tag.objects.get(name=tag_name)  # Adjust if you use `django-taggit`
+            album.tags.add(tag)
+
+            rendered_html = render_to_string("blog/partials/tag_badge.html", {"tag": tag})
+            return JsonResponse({"rendered_html": rendered_html})
+
+        except Exception as e:
+            print("Error adding tag:", e)
+            return JsonResponse({'error': 'Could not add tag'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
 # View to edit the title of an album
 @login_required(login_url='login')
 @user_passes_test(is_photographer)
@@ -322,6 +355,7 @@ def update_caption(request, photo_id):
 def album_detail(request, album_id):
     album = get_object_or_404(Album, id=album_id)
     is_photographer = request.user.groups.filter(name="Photographers").exists()
+    all_tags = Tag.objects.all()
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.method == 'GET':
         if not is_photographer:
@@ -334,7 +368,7 @@ def album_detail(request, album_id):
     # photos = album.photos.all()
     photos = album.photos.order_by('order', 'id')
 
-    return render(request, 'blog/album_detail.html', {'album': album, 'photos': photos, 'is_photographer': is_photographer})
+    return render(request, 'blog/album_detail.html', {'album': album, 'photos': photos, 'is_photographer': is_photographer, 'all_tags': all_tags})
 
 @login_required(login_url='login')
 @require_POST

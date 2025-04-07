@@ -17,7 +17,7 @@
                 </div>
             {% endif %}
         </div>
-        
+
         <div class="mb-3">
             <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
             {{ form.description|add_class:"form-control" }}
@@ -47,6 +47,9 @@
 
 {% block extra_js %}
 <script>
+
+// Script to choose tags to apply to album
+
     const selectedTagsContainer = document.getElementById("selected-tags");
     const tagListContainer = document.querySelector('.tag-list');
     let selectedTags = [];
