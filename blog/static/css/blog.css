@@ -307,3 +307,20 @@ pointer-events: none;
     margin-top: 0;
 
 }
+
+#tag-suggestions {
+    max-height: 400px;
+    overflow-y: auto;
+    display: none;
+}
+#tag-suggestions .list-group-item {
+    cursor: pointer;
+}
+
+#custom-tag-input {
+    min-width: 250px;
+}
+
+.album-info span i {
+    display: none;
+}

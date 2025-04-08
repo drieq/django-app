@@ -56,6 +56,9 @@
                 <div class="album-info">
                     <h2>{{ album.title }}</h2>
                     <p class="published-date">Created on: {{ album.created_at }}</p>
+                    {% for tag in album.tags.all %}
+                        {% include "blog/partials/tag_badge.html" with tag=tag %}
+                    {% endfor %}
                 </div>
             </article>
         </a>

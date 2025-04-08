@@ -209,11 +209,34 @@ def create_tag(request):
         data = json.loads(request.body)
         tag_name = data.get("name", "").strip()
 
+        if not tag_name:
+            return JsonResponse({"error": "Tag name is required"}, status=400)
+        
+        existing_tag = Tag.objects.filter(name__iexact=tag_name).first()
+        if existing_tag:
+            return JsonResponse({"error": "Tag already exists", "existing_name": existing_tag.name}, status=400)
+
         if tag_name:
             tag, created = Tag.objects.get_or_create(name=tag_name, user=request.user)
             return JsonResponse({"name": tag.name})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+@require_POST
+def delete_tag(request):
+    data = json.loads(request.body)
+    tag_name = data.get("name")
+
+    if not tag_name:
+        return JsonResponse({"error": "No tag provided"}, status=400)
+
+    tag = Tag.objects.filter(name=tag_name).first()
+
+    if tag:
+        tag.delete()
+        return JsonResponse({"success": True})
+    else:
+        return JsonResponse({"error": "Tag not found"}, status=404)
 
 def update_album_tags(request, album_id):
     if request.method == 'POST' and request.is_ajax():

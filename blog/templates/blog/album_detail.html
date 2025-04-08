@@ -5,105 +5,112 @@
 
 {% csrf_token %}
 
-    <!-- Album Title Section -->
-    <div class="d-flex align-items-center">
-        <h2 id="album-title" class="">{{ album.title }}</h2>
-        {% if is_photographer %}
-            <input type="text" id="album-title-input" value="{{ album.title }}" class="form-control" style="display:none; width: 300px; font-size: 26px;"/>
-            <button id="edit-title-btn" class="btn btn-link text-primary ms-0" style="display:block;"><i class="bi bi-pencil"></i></button>
-        {% endif %}
-    </div>
-
-    <!-- Album Description Section -->
-    <div class="d-flex align-items-center mt-3">
-        <p id="album-description" class="" style="max-width: 500px;">{{ album.description }}</p>
-        {% if is_photographer %}
-            <textarea id="album-description-input" class="form-control mb-3" style="display:none; max-width:500px; height:150px;">{{ album.description }}</textarea>
-            <button id="edit-description-btn" class="btn btn-link text-primary" style="display:block;"><i class="bi bi-pencil"></i></button>
-        {% endif %}
-    </div>
-
-
-    <div class="d-flex align-items-center mb-3" id="tag-container">
-        <!--<label for="tag-selector" class="form-label">Add Existing Tag</label>-->
-        <!--<select id="tag-selector" class="form-select form-select-sm badge-like-select me-1">-->
-        <!--    <option value="">-- Choose a tag --</option>-->
-        <!--    {% for tag in all_tags %}-->
-        <!--        <option value="{{ tag.name }}">{{ tag.name }}</option>-->
-        <!--    {% endfor %}-->
-        <!--</select>-->
-        <!--<button id="add-tag-btn" class="btn btn-sm btn-outline-primary rounded-pill me-1">Add Tag</button>-->
-        <div class="position-relative" id="custom-tag-input-wrapper">
-            <input type="text" id="custom-tag-input" class="form-control" placeholder="Type to search or add a tag" autocomplete="off">
-            <div id="tag-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000;"></div>
+<div class="d-flex">
+    <div class="col-6">
+        <!-- Album Title Section -->
+        <div class="d-flex align-items-center">
+            <h2 id="album-title" class="">{{ album.title }}</h2>
+            {% if is_photographer %}
+                <input type="text" id="album-title-input" value="{{ album.title }}" class="form-control" style="display:none; width: 300px; font-size: 26px;"/>
+                <button id="edit-title-btn" class="btn btn-link text-primary ms-0" style="display:block;"><i class="bi bi-pencil"></i></button>
+            {% endif %}
         </div>
 
-        <!-- New tag input -->
-        <!--<input type="text" id="new-tag-input" class="form-control form-control-sm me-2 mb-2" placeholder="New tag name" style="width: 160px;">-->
-        <!--<button id="create-tag-btn" type="button" class="btn btn-sm btn-outline-secondary rounded-pill me-2 mb-2">-->
-        <!--    Create Tag-->
-        <!--</button>-->
+        <!-- Album Description Section -->
+        <div class="d-flex align-items-center mt-3">
+            <p id="album-description" class="" style="max-width: 500px;">{{ album.description }}</p>
+            {% if is_photographer %}
+                <textarea id="album-description-input" class="form-control mb-3" style="display:none; max-width:500px; height:150px;">{{ album.description }}</textarea>
+                <button id="edit-description-btn" class="btn btn-link text-primary" style="display:block;"><i class="bi bi-pencil"></i></button>
+            {% endif %}
+        </div>
 
-        {% for tag in album.tags.all %}
 
-            {% include "blog/partials/tag_badge.html" with tag=tag %}
-
-            <!--<span class="badge rounded-pill text-bg-primary me-1" data-tag="{{ tag.name }}">-->
-            <!--    {{ tag.name }} <i id="remove-tag-button-{{ tag.name }}" class="bi bi-x-circle ms-1 remove-tag-button"></i>-->
-            <!--</span>-->
-
-        {% empty %}
-
-            <span class="no-tags-message">No tags</span>
-
-        {% endfor %}
-
-    </div>
-
-    {% if is_photographer %}
-        <button id="upload-btn" class="btn btn-primary">
-            <i class="bi bi-upload"></i> Upload Photos</button>
-        <div id="message" style="display:none; color:red;"></div>
-
-        <a onclick="confirmDeleteAlbum('{{ album.id }}')" class="btn btn-outline-danger">
-            <i class="bi bi-trash"></i> Delete Album</a>
-
-        <div id="upload-area" style="display:none;">
-            <div id="drop-area">
-                <p>Drag & Drop images here or <label for="file-input" class="file-label">browse</label></p>
-                <input type="file" id="file-input" multiple accept="image/*" style="display: none;">
+        <div class="d-flex align-items-center mb-3" id="tag-container">
+            <!--<label for="tag-selector" class="form-label">Add Existing Tag</label>-->
+            <!--<select id="tag-selector" class="form-select form-select-sm badge-like-select me-1">-->
+            <!--    <option value="">-- Choose a tag --</option>-->
+            <!--    {% for tag in all_tags %}-->
+            <!--        <option value="{{ tag.name }}">{{ tag.name }}</option>-->
+            <!--    {% endfor %}-->
+            <!--</select>-->
+            <!--<button id="add-tag-btn" class="btn btn-sm btn-outline-primary rounded-pill me-1">Add Tag</button>-->
+            <div class="position-relative me-2" id="custom-tag-input-wrapper">
+                <input type="text" id="custom-tag-input" class="form-control" placeholder="Type to search or add a tag" autocomplete="off">
+                <div id="tag-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000;"></div>
             </div>
 
-            <div id="preview"></div>
-            <button id="start-upload" class="btn btn-success" disabled>Upload</button>
+            <!-- New tag input -->
+            <!--<input type="text" id="new-tag-input" class="form-control form-control-sm me-2 mb-2" placeholder="New tag name" style="width: 160px;">-->
+            <!--<button id="create-tag-btn" type="button" class="btn btn-sm btn-outline-secondary rounded-pill me-2 mb-2">-->
+            <!--    Create Tag-->
+            <!--</button>-->
+
+            {% for tag in album.tags.all %}
+
+                {% include "blog/partials/tag_badge.html" with tag=tag %}
+
+                <!--<span class="badge rounded-pill text-bg-primary me-1" data-tag="{{ tag.name }}">-->
+                <!--    {{ tag.name }} <i id="remove-tag-button-{{ tag.name }}" class="bi bi-x-circle ms-1 remove-tag-button"></i>-->
+                <!--</span>-->
+
+            {% empty %}
+
+                <span class="no-tags-message">No tags</span>
+
+            {% endfor %}
+
         </div>
-
-    {% endif %}
-
-    <h3 class="mt-5">Photos in this album:</h3>
-
-    <div class="row album-photos" id="photo-list">
-        {% for photo in photos %}
-        <div class="photo-item col card p-0" data-id="{{ photo.id }}">
-            <a href="{% url 'photo_detail' photo.id %}">
-                <img src="{{ photo.thumbnail.url }}?v={ photo.uploaded_at.timestamp }}" alt="{{ photo.caption }}" width="100" draggable="false"/>
-            </a>
-            <div class="photo-details p-2">
-                <span
-                    class="caption editable"
-                    contenteditable="true"
-                    data-id="{{ photo.id }}"
-                    spellcheck="false"
-                >
-                    {{ photo.caption }}
-                </span>
-                <button class="btn btn-outline-danger btn-sm" onclick="confirmDeletePhoto('{{ photo.id }}')">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        </div>
-        {% endfor %}
     </div>
+
+    <div class="col-6 text-end">
+
+        {% if is_photographer %}
+            <button id="upload-btn" class="btn btn-primary">
+                <i class="bi bi-upload"></i> Upload Photos</button>
+            <div id="message" style="display:none; color:red;"></div>
+
+            <a onclick="confirmDeleteAlbum('{{ album.id }}')" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Delete Album</a>
+
+            <div id="upload-area" style="display:none;">
+                <div id="drop-area">
+                    <p>Drag & Drop images here or <label for="file-input" class="file-label">browse</label></p>
+                    <input type="file" id="file-input" multiple accept="image/*" style="display: none;">
+                </div>
+
+                <div id="preview"></div>
+                <button id="start-upload" class="btn btn-success" disabled>Upload</button>
+            </div>
+
+        {% endif %}
+    </div>
+</div>
+
+<h3 class="mt-5">Photos in this album:</h3>
+
+        <div class="row album-photos" id="photo-list">
+            {% for photo in photos %}
+            <div class="photo-item col card p-0" data-id="{{ photo.id }}">
+                <a href="{% url 'photo_detail' photo.id %}">
+                    <img src="{{ photo.thumbnail.url }}?v={ photo.uploaded_at.timestamp }}" alt="{{ photo.caption }}" width="100" draggable="false"/>
+                </a>
+                <div class="photo-details p-2">
+                    <span
+                        class="caption editable"
+                        contenteditable="true"
+                        data-id="{{ photo.id }}"
+                        spellcheck="false"
+                    >
+                        {{ photo.caption }}
+                    </span>
+                    <button class="btn btn-outline-danger btn-sm" onclick="confirmDeletePhoto('{{ photo.id }}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
 
 <script src="{% static 'scripts/delete_album.js' %}"></script>
 <script src="{% static 'scripts/delete_photo.js' %}"></script>
@@ -542,7 +549,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch("/get-tags/?search=")  // Fetch all tags
         .then(response => response.json())
         .then(data => {
-            allTags = data.map(tag => tag.name.toLowerCase());
+            allTags = data.map(tag => tag.name);
             tagsLoaded = true;
             // filterTagSelector();
         })
@@ -775,31 +782,42 @@ document.addEventListener("DOMContentLoaded", function () {
 // //////////////////////////////// //////////////////////////////
 // //////////////////////////////// //////////////////////////////
 
-    const inputField = document.getElementById("custom-tag-input");
-    const suggestionBox = document.getElementById("tag-suggestions");
-
-    inputField.addEventListener("input", function () {
+    function showTagSuggestions(query = "") {
         if (!tagsLoaded) return;
-
-        const query = this.value.trim().toLowerCase();
 
         // Reset suggestions
         suggestionBox.innerHTML = "";
-        if (!query) {
-            suggestionBox.style.display = "none";
-            return;
-        }
 
         // Filter tags
-        const filteredTags = allTags.filter(tag => tag.toLowerCase().includes(query));
+        const filteredTags = allTags.filter(tag => tag.toLowerCase().includes(query.toLowerCase()));
 
         // Add existing tag suggestions
         filteredTags.forEach(tag => {
-            const item = document.createElement("button");
-            item.type = "button";
-            item.className = "list-group-item list-group-item-action";
-            item.textContent = tag;
-            item.onclick = () => addTagToAlbum(tag);
+            const item = document.createElement("div");
+            item.className = "list-group-item d-flex justify-content-between align-items-center";
+
+            const tagButton = document.createElement("button");
+            tagButton.type = "button";
+            tagButton.className = "btn btn-link p-0 text-start text-decoration-none flex-grow-1";
+            tagButton.textContent = tag;
+            tagButton.onclick = () => addTagToAlbum(tag);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.type = "button";
+            deleteBtn.className = "btn ms-2";
+            deleteBtn.innerHTML = '<i class="bi bi-x-circle"></i>';
+            deleteBtn.title = "Delete tag";
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                deleteTag(tag);
+            };
+
+            // item.type = "button";
+            // item.className = "list-group-item list-group-item-action";
+            // item.textContent = tag;
+            // item.onclick = () => addTagToAlbum(tag);
+            item.appendChild(tagButton);
+            item.appendChild(deleteBtn);
             suggestionBox.appendChild(item);
         });
 
@@ -814,12 +832,48 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         suggestionBox.style.display = "block";
+    }
+
+    const inputField = document.getElementById("custom-tag-input");
+    const suggestionBox = document.getElementById("tag-suggestions");
+
+    inputField.addEventListener("input", function () {
+        const query = this.value.trim();
+        showTagSuggestions(query);
+    });
+
+    inputField.addEventListener("focus", function () {
+        showTagSuggestions(this.value.trim());
     });
 
     // Hide suggestions on blur
     inputField.addEventListener("blur", () => {
         setTimeout(() => suggestionBox.style.display = "none", 100); // Allow click to register
     });
+
+    function deleteTag(tagName) {
+        if (!confirm(`Are you sure you want to delete "${tagName}" from the system?`)) return;
+
+        fetch("{% url 'delete_tag' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({ name: tagName })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to delete tag");
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                allTags = allTags.filter(t => t.toLowerCase() !== tagName.toLowerCase());
+                inputField.dispatchEvent(new Event("input")); // refresh suggestions
+            }
+        })
+        .catch(console.error);
+    }
 
     function addTagToAlbum(tagName) {
         fetch("{% url 'add_album_tag' album.id %}", {
@@ -856,6 +910,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function createNewTag(tagName) {
+
+        const lowerTag = tagName.toLowerCase();
+        const alreadyExists = allTags.some(tag => tag.toLowerCase() === lowerTag);
+
+        if (alreadyExists) {
+            alert(`A tag named "${tagName}" already exists.`);
+            return;
+        }
+
         fetch("{% url 'create_tag' %}", {
             method: "POST",
             headers: {

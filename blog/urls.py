@@ -31,9 +31,11 @@ urlpatterns = [
     path('album/<int:album_id>/reorder/', views.reorder_photos, name='reorder_photos'),
     path('get-tags/', views.get_tags, name='get_tags'),
     path("create-tag/", views.create_tag, name="create_tag"),
+    path("tags/delete/", views.delete_tag, name="delete_tag"),
     path('update-album-tags/<int:album_id>/', views.update_album_tags, name='update_album_tags'),
     path('album/<int:album_id>/remove-tag/', views.remove_album_tag, name='remove_album_tag'),
     path('album/<int:album_id>/add-tag/', views.add_album_tag, name='add_album_tag'),
+
 
     # Photo URLs
     path('delete_photo/<int:photo_id>/', views.delete_photo, name='delete_photo'),
