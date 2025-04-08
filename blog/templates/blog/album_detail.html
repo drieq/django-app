@@ -23,19 +23,26 @@
         {% endif %}
     </div>
 
-    <!--<div class="mb-3">-->
-
-    <!--</div>-->
 
     <div class="d-flex align-items-center mb-3" id="tag-container">
         <!--<label for="tag-selector" class="form-label">Add Existing Tag</label>-->
-        <select id="tag-selector" class="form-select form-select-sm badge-like-select me-1">
-            <option value="">-- Choose a tag --</option>
-            {% for tag in all_tags %}
-                <option value="{{ tag.name }}">{{ tag.name }}</option>
-            {% endfor %}
-        </select>
-        <button id="add-tag-btn" class="btn btn-sm btn-outline-primary rounded-pill me-1">Add Tag</button>
+        <!--<select id="tag-selector" class="form-select form-select-sm badge-like-select me-1">-->
+        <!--    <option value="">-- Choose a tag --</option>-->
+        <!--    {% for tag in all_tags %}-->
+        <!--        <option value="{{ tag.name }}">{{ tag.name }}</option>-->
+        <!--    {% endfor %}-->
+        <!--</select>-->
+        <!--<button id="add-tag-btn" class="btn btn-sm btn-outline-primary rounded-pill me-1">Add Tag</button>-->
+        <div class="position-relative" id="custom-tag-input-wrapper">
+            <input type="text" id="custom-tag-input" class="form-control" placeholder="Type to search or add a tag" autocomplete="off">
+            <div id="tag-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000;"></div>
+        </div>
+
+        <!-- New tag input -->
+        <!--<input type="text" id="new-tag-input" class="form-control form-control-sm me-2 mb-2" placeholder="New tag name" style="width: 160px;">-->
+        <!--<button id="create-tag-btn" type="button" class="btn btn-sm btn-outline-secondary rounded-pill me-2 mb-2">-->
+        <!--    Create Tag-->
+        <!--</button>-->
 
         {% for tag in album.tags.all %}
 
@@ -47,7 +54,7 @@
 
         {% empty %}
 
-            <span>No tags</span>
+            <span class="no-tags-message">No tags</span>
 
         {% endfor %}
 
@@ -521,25 +528,149 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
-    const tagSelector = document.getElementById("tag-selector");
-
-    // Remove options from dropdown for tags already on the album
-    function filterTagSelector() {
-        const existingTags = Array.from(document.querySelectorAll("[data-tag]"))
-                                  .map(el => el.getAttribute("data-tag"));
-
-        const options = Array.from(tagSelector.options);
-        options.forEach(option => {
-            if (existingTags.includes(option.value)) {
-                option.remove();
-            }
-        });
-    }
-
+    // const tagSelector = document.getElementById("tag-selector");
     const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
-    document.querySelectorAll(".remove-tag-button").forEach(button => {
+    // Store all tags on initial load
+    // const allTags = Array.from(tagSelector.options)
+    //                     .filter(option => option.value)
+    //                     .map(option => option.value);
+
+    let allTags = [];
+    let tagsLoaded = false;
+
+    fetch("/get-tags/?search=")  // Fetch all tags
+        .then(response => response.json())
+        .then(data => {
+            allTags = data.map(tag => tag.name.toLowerCase());
+            tagsLoaded = true;
+            // filterTagSelector();
+        })
+        .catch(error => {
+            console.error("Error fetching tags:", error);
+        });
+
+
+    // Handle creating a new tag
+    // document.getElementById("create-tag-btn").addEventListener("click", function () {
+    //     const newTagInput = document.getElementById("new-tag-input");
+    //     const newTagName = newTagInput.value.trim();
+
+    //     if (!newTagName || allTags.includes(newTagName)) {
+    //         newTagInput.classList.add("is-invalid");
+    //         return;
+    //     }
+
+    //     fetch("{% url 'create_tag' %}", {
+    //         method: "POST",
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //             "X-CSRFToken": csrfToken,
+    //         },
+    //         body: JSON.stringify({ name: newTagName })
+    //     })
+    //     .then(response => {
+    //         if (!response.ok) throw new Error("Failed to create tag");
+    //         return response.json();
+    //     })
+    //     .then(data => {
+    //         if (data.name) {
+    //             allTags.push(data.name);  // Add to internal list
+    //             filterTagSelector();      // Rebuild dropdown
+    //             newTagInput.value = "";   // Clear input
+    //             newTagInput.classList.remove("is-invalid");
+
+    //             // Immediately add the newly created tag to the album
+    //             fetch("{% url 'add_album_tag' album.id %}", {
+    //                 method: "POST",
+    //                 headers: {
+    //                     "Content-Type": "application/json",
+    //                     "X-CSRFToken": csrfToken,
+    //                 },
+    //                 body: JSON.stringify({ tag: data.name })
+    //             })
+    //             .then(response => {
+    //                 if (!response.ok) throw new Error("Failed to add new tag to album");
+    //                 return response.json();
+    //             })
+    //             .then(addData => {
+    //                 if (addData.rendered_html) {
+    //                     const wrapper = document.createElement("div");
+    //                     wrapper.innerHTML = addData.rendered_html;
+
+    //                     const tagElement = wrapper.firstElementChild;
+    //                     if (tagElement) {
+    //                         tagElement.style.opacity = "0";
+    //                         tagElement.style.transform = "translateY(-10px)";
+    //                         tagElement.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+    //                         document.getElementById("tag-container").appendChild(tagElement);
+    //                         checkIfNoTags();
+
+    //                         requestAnimationFrame(() => {
+    //                             tagElement.style.opacity = "1";
+    //                             tagElement.style.transform = "translateY(0)";
+    //                         });
+
+    //                         const removeBtn = tagElement.querySelector(".remove-tag-button");
+    //                         if (removeBtn) {
+    //                             attachRemoveHandler(removeBtn);
+    //                         }
+
+    //                         filterTagSelector();
+    //                     }
+    //                 }
+
+    //                 tagSelector.value = "";
+    //             })
+    //             .catch(error => {
+    //                 console.error("Error adding new tag to album:", error);
+    //             });
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error("Error creating tag:", error);
+    //         newTagInput.classList.add("is-invalid");
+    //     });
+    // });
+
+    function checkIfNoTags() {
+        const tagContainer = document.getElementById("tag-container");
+        const existingTags = tagContainer.querySelectorAll("[data-tag]");
+        let noTagMessage = tagContainer.querySelector(".no-tags-message");
+
+        if (existingTags.length === 0) {
+            if (!noTagMessage) {
+                noTagMessage = document.createElement("span");
+                noTagMessage.textContent = "No tags";
+                noTagMessage.classList.add("no-tags-message");
+                tagContainer.appendChild(noTagMessage);
+            }
+        } else {
+            if (noTagMessage) {
+                noTagMessage.remove();
+            }
+        }
+    }
+
+    // function filterTagSelector() {
+    //     const existingTags = Array.from(document.querySelectorAll("[data-tag]"))
+    //                               .map(el => el.getAttribute("data-tag"));
+
+    //     // Clear and rebuild dropdown
+    //     // tagSelector.innerHTML = '<option value="">-- Choose a tag --</option>';
+
+    //     allTags.forEach(tag => {
+    //         if (!existingTags.includes(tag)) {
+    //             const option = document.createElement("option");
+    //             option.value = tag;
+    //             option.textContent = tag;
+    //             tagSelector.appendChild(option);
+    //         }
+    //     });
+    // }
+
+    // Reusable remove-tag handler
+    function attachRemoveHandler(button) {
         button.addEventListener("click", function () {
             const tagSpan = this.closest("span[data-tag]");
             const tagName = tagSpan.dataset.tag;
@@ -558,17 +689,14 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .then(data => {
                 if (data.success) {
-                    // Animate tag removal
                     tagSpan.style.transition = "opacity 0.3s ease, transform 0.3s ease";
                     tagSpan.style.opacity = "0";
                     tagSpan.style.transform = "translateY(-10px)";
-
-                    // Remove from DOM after animation
-                    setTimeout(() => tagSpan.remove(), 300);
-                    // Remove the tag badge from DOM
-                    // tagSpan.remove();
-                    filterTagSelector();
-
+                    setTimeout(() => {
+                        tagSpan.remove();
+                        // filterTagSelector(); // Now it runs after the DOM is updated
+                        checkIfNoTags();
+                    }, 300);
                 } else {
                     console.error("Tag removal failed.");
                 }
@@ -577,105 +705,175 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.error("Error:", error);
             });
         });
-    });
-});
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
-    const addTagBtn = document.getElementById("add-tag-btn");
-    const tagSelector = document.getElementById("tag-selector");
-    const tagContainer = document.getElementById("tag-container");  // Where tags are shown
-
-    // Remove options from dropdown for tags already on the album
-    function filterTagSelector() {
-        const existingTags = Array.from(document.querySelectorAll("[data-tag]"))
-                                  .map(el => el.getAttribute("data-tag"));
-
-        const options = Array.from(tagSelector.options);
-        options.forEach(option => {
-            if (existingTags.includes(option.value)) {
-                option.remove();
-            }
-        });
     }
 
-    filterTagSelector();
+    // Attach initial listeners
+    document.querySelectorAll(".remove-tag-button").forEach(button => {
+        attachRemoveHandler(button);
+    });
 
-    addTagBtn.addEventListener("click", function () {
-        const selectedTag = tagSelector.value;
-        if (!selectedTag) return;
+    // Handle adding tag
+    // document.getElementById("add-tag-btn").addEventListener("click", function () {
+    //     const selectedTag = tagSelector.value;
+    //     if (!selectedTag) return;
 
+    //     fetch("{% url 'add_album_tag' album.id %}", {
+    //         method: "POST",
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //             "X-CSRFToken": csrfToken,
+    //         },
+    //         body: JSON.stringify({ tag: selectedTag })
+    //     })
+    //     .then(response => {
+    //         if (!response.ok) throw new Error("Failed to add tag");
+    //         return response.json();
+    //     })
+    //     .then(data => {
+    //         if (data.rendered_html) {
+    //             const wrapper = document.createElement("div");
+    //             wrapper.innerHTML = data.rendered_html;
+
+    //             const tagElement = wrapper.firstElementChild;
+    //             if (tagElement) {
+    //                 tagElement.style.opacity = "0";
+    //                 tagElement.style.transform = "translateY(-10px)";
+    //                 tagElement.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+    //                 document.getElementById("tag-container").appendChild(tagElement);
+    //                 checkIfNoTags();
+
+    //                 requestAnimationFrame(() => {
+    //                     tagElement.style.opacity = "1";
+    //                     tagElement.style.transform = "translateY(0)";
+    //                 });
+
+    //                 // Attach new remove handler
+    //                 const removeBtn = tagElement.querySelector(".remove-tag-button");
+    //                 if (removeBtn) {
+    //                     attachRemoveHandler(removeBtn);
+    //                 }
+
+    //                 filterTagSelector();
+    //             }
+
+    //             tagSelector.value = "";
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error("Error adding tag:", error);
+    //     });
+    // });
+
+
+// //////////////////////////////// //////////////////////////////
+// //////////////////////////////// //////////////////////////////
+// //////////////////////////////// //////////////////////////////
+// //////////////////////////////// //////////////////////////////
+// //////////////////////////////// //////////////////////////////
+// //////////////////////////////// //////////////////////////////
+// //////////////////////////////// //////////////////////////////
+// //////////////////////////////// //////////////////////////////
+// //////////////////////////////// //////////////////////////////
+
+    const inputField = document.getElementById("custom-tag-input");
+    const suggestionBox = document.getElementById("tag-suggestions");
+
+    inputField.addEventListener("input", function () {
+        if (!tagsLoaded) return;
+
+        const query = this.value.trim().toLowerCase();
+
+        // Reset suggestions
+        suggestionBox.innerHTML = "";
+        if (!query) {
+            suggestionBox.style.display = "none";
+            return;
+        }
+
+        // Filter tags
+        const filteredTags = allTags.filter(tag => tag.toLowerCase().includes(query));
+
+        // Add existing tag suggestions
+        filteredTags.forEach(tag => {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "list-group-item list-group-item-action";
+            item.textContent = tag;
+            item.onclick = () => addTagToAlbum(tag);
+            suggestionBox.appendChild(item);
+        });
+
+        // Offer to create new tag if it doesn't exist
+        if (!allTags.includes(query)) {
+            const createItem = document.createElement("button");
+            createItem.type = "button";
+            createItem.className = "list-group-item list-group-item-action list-group-item-success";
+            createItem.textContent = `Create tag "${query}"`;
+            createItem.onclick = () => createNewTag(query);
+            suggestionBox.appendChild(createItem);
+        }
+
+        suggestionBox.style.display = "block";
+    });
+
+    // Hide suggestions on blur
+    inputField.addEventListener("blur", () => {
+        setTimeout(() => suggestionBox.style.display = "none", 100); // Allow click to register
+    });
+
+    function addTagToAlbum(tagName) {
         fetch("{% url 'add_album_tag' album.id %}", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": csrfToken,
             },
-            body: JSON.stringify({ tag: selectedTag })
+            body: JSON.stringify({ tag: tagName })
         })
         .then(response => {
             if (!response.ok) throw new Error("Failed to add tag");
             return response.json();
         })
         .then(data => {
+            console.log("Rendered HTML:", data.rendered_html);  // Log the response
             if (data.rendered_html) {
                 const wrapper = document.createElement("div");
                 wrapper.innerHTML = data.rendered_html;
-
                 const tagElement = wrapper.firstElementChild;
-                if (tagElement) {
 
-                    tagElement.style.opacity = "0";
-                    tagElement.style.transform = "translateY(-10px)";
-                    tagElement.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+                document.getElementById("tag-container").appendChild(tagElement);
 
-                    tagContainer.appendChild(tagElement);
+                const removeBtn = tagElement.querySelector(".remove-tag-button");
+                if (removeBtn) attachRemoveHandler(removeBtn);
 
-                    requestAnimationFrame(() => {
-                        tagElement.style.opacity = "1";
-                        tagElement.style.transform = "translateY(0)";
-                    });
-
-                    // Optional: Reattach the remove button listener
-                    const removeBtn = tagElement.querySelector(".remove-tag-button");
-                    if (removeBtn) {
-                        removeBtn.addEventListener("click", function () {
-                            const tagName = tagElement.getAttribute("data-tag");
-                            fetch(`/album/{{ album.id }}/remove-tag/`, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRFToken": csrfToken
-                                },
-                                body: JSON.stringify({ tag: tagName })
-                            })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.success) {
-                                    // Animate tag removal
-                                    tagElement.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-                                    tagElement.style.opacity = "0";
-                                    tagElement.style.transform = "translateY(-10px)";
-
-                                    // Remove from DOM after animation
-                                    setTimeout(() => tagElement.remove(), 300);
-                                    filterTagSelector();
-                                }
-                            });
-                        });
-                    }
-                    filterTagSelector();
-                }
-
-                tagSelector.value = ""; // Reset dropdown
+                checkIfNoTags();
+                // filterTagSelector();
             }
+            inputField.value = "";
+            suggestionBox.innerHTML = "";
         })
-        .catch(error => {
-            console.error("Error adding tag:", error);
-        });
-    });
+        .catch(console.error);
+    }
+
+    function createNewTag(tagName) {
+        fetch("{% url 'create_tag' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({ name: tagName })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to create tag");
+            return response.json();
+        })
+        .then(data => {
+            allTags.push(data.name); // add to available tags
+            addTagToAlbum(data.name);
+        })
+        .catch(console.error);
+    }
 });
 </script>
 

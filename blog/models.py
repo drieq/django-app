@@ -51,9 +51,13 @@ class Album(models.Model):
 
     def __str__(self):
         return self.title
-    
+
 class Tag(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tags")
+
+    class Meta:
+        unique_together = ('name', 'user')  # Ensures a user can't create duplicate tag names
 
     def __str__(self):
         return self.name

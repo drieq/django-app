@@ -59,9 +59,11 @@ class AlbumForm(forms.ModelForm):
             tag_names = [name.strip() for name in tag_names.split(',')]
             tags = []
             for name in tag_names:
-                tag, created = Tag.objects.get_or_create(name=name)
+                tag, created = Tag.objects.get_or_create(name=name, user=user)
                 tags.append(tag)
             album.tags.set(tags)
+        else:
+            album.tags.clear()
 
         return album
 

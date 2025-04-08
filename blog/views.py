@@ -131,23 +131,28 @@ def remove_album_tag(request, album_id):
             return JsonResponse({'success': False}, status=400)
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+@require_POST
 def add_album_tag(request, album_id):
-    if request.method == 'POST' and request.user.is_authenticated:
-        album = get_object_or_404(Album, id=album_id, owner=request.user)
-        try:
-            data = json.loads(request.body)
-            tag_name = data.get("tag")
-            tag = Tag.objects.get(name=tag_name)  # Adjust if you use `django-taggit`
-            album.tags.add(tag)
+    data = json.loads(request.body)
+    tag_name = data.get("tag")
 
-            rendered_html = render_to_string("blog/partials/tag_badge.html", {"tag": tag})
-            return JsonResponse({"rendered_html": rendered_html})
+    if not tag_name:
+        return JsonResponse({"error": "No tag provided"}, status=400)
 
-        except Exception as e:
-            print("Error adding tag:", e)
-            return JsonResponse({'error': 'Could not add tag'}, status=400)
+    album = get_object_or_404(Album, pk=album_id)
+    tag = Tag.objects.filter(name__iexact=tag_name).first()
 
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+    if tag:
+        album.tags.add(tag)
+        album.save()
+
+        # Render the HTML for the newly added tag
+        rendered_html = render_to_string('blog/partials/tag_badge.html', {'tag': tag})
+
+        # Return the HTML in the response
+        return JsonResponse({"rendered_html": rendered_html})
+    else:
+        return JsonResponse({"error": "Tag not found"}, status=404)
 
 # View to edit the title of an album
 @login_required(login_url='login')
@@ -194,9 +199,21 @@ def update_album_description(request, album_id):
 
 def get_tags(request):
     query = request.GET.get('search', '')
-    tags = Tag.objects.filter(name__icontains=query)  # Case-insensitive search
+    user = request.user
+    tags = Tag.objects.filter(user=user, name__icontains=query)  # Case-insensitive search
     tag_data = [{'name': tag.name} for tag in tags]
     return JsonResponse(tag_data, safe=False)
+
+def create_tag(request):
+    if request.method == "POST" and request.user.is_authenticated:
+        data = json.loads(request.body)
+        tag_name = data.get("name", "").strip()
+
+        if tag_name:
+            tag, created = Tag.objects.get_or_create(name=tag_name, user=request.user)
+            return JsonResponse({"name": tag.name})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 def update_album_tags(request, album_id):
     if request.method == 'POST' and request.is_ajax():
@@ -355,7 +372,7 @@ def update_caption(request, photo_id):
 def album_detail(request, album_id):
     album = get_object_or_404(Album, id=album_id)
     is_photographer = request.user.groups.filter(name="Photographers").exists()
-    all_tags = Tag.objects.all()
+    all_tags = Tag.objects.filter(user=request.user)
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.method == 'GET':
         if not is_photographer:
